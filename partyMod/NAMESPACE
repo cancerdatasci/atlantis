@@ -1,0 +1,60 @@
+
+importFrom("coin", "logrank_trafo", "trafo", "id_trafo", "of_trafo")
+importFrom("stats", "weights")
+importFrom("survival", "Surv", "survfit", "is.Surv")
+
+import("modeltools")
+import("methods")
+import("zoo")
+import("strucchange")
+import("sandwich")
+import("grid")
+
+importClassesFrom("coin", "ExpectCovar", "ExpectCovarInfluence")
+
+export(ctree, ctree_memory, ctree_control, 
+       node_inner, edge_simple, node_terminal,
+       node_surv, node_barplot, node_boxplot,
+       node_hist, node_density,
+       node_scatterplot, node_bivplot,
+       where, nodes, conditionalTree,
+       treeresponse, response, ptrafo, cforest,
+       mob, mob_control,
+       reweight, sctest.mob, cforest_control, varimp, varimpAUC,
+       cforest_classical, cforest_unbiased, proximity)
+
+exportClasses("BinaryTree", "LearningSample", "SplittingNode",
+              "TerminalNode", "TreeControl", "RandomForest", "mob",
+              "ForestControl", "TerminalModelNode")
+exportMethods("initialize", "fit", "show", "initVariableFrame")
+
+S3method(print, BinaryTree)
+S3method(print, nominalSplit)
+S3method(print, orderedSplit)
+S3method(print, SplittingNode)
+S3method(print, TerminalNode)
+S3method(print, TerminalModelNode)
+S3method(print, RandomForest)
+S3method(plot, BinaryTree)
+S3method(predict, BinaryTree)
+S3method(predict, RandomForest)
+S3method(weights, BinaryTree)
+S3method(weights, RandomForest)
+
+S3method(coef, mob)
+S3method(deviance, mob)
+S3method(fitted, mob)
+S3method(logLik, mob)
+S3method(plot, mob)
+S3method(predict, mob)
+S3method(print, mob)
+S3method(residuals, mob)
+### S3method(sctest, mob)
+S3method(summary, mob)
+S3method(weights, mob)
+
+S3method(reweight, glinearModel)
+S3method(reweight, linearModel)
+S3method(reweight, survReg)
+
+useDynLib(atlantisPartyMod)

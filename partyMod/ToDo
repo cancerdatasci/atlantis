@@ -1,0 +1,38 @@
+
+### conditional inference trees
+
+o  ctree(y ~ x1 + x2 - x3) will not work
+
+o  implement quantile regression (Meinshausen, JMLR)
+
+o  implement cvrisk for ctree and cforest (now that predictions for obs with zero
+   weight are computed)
+
+o  we can re-compute prediction weights from the weights in the root
+   node, the terminal node number and where.
+
+o  more checks for MonteCarlo
+
+o  check convenience functions (`treepredict' seems the
+   wrong name)
+
+o  predictions for multiple response including factors
+
+o  check storage mode of ordinal variables and fix varimp
+
+o  missing values and splitting: weights isn't adjusted for functions in
+   Split.c
+
+o  implement splits in binary factors without looking at statistics (check
+   only minsplit)
+
+o  vignette for cforest
+
+o  varimp for censored observations
+
+o  varimp for matrix interface
+
+### model-based trees
+
+o  better docu for mob (incl. journal + survreg)
+

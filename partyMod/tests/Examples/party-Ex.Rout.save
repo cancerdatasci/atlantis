@@ -1,0 +1,986 @@
+
+R version 3.1.0 (2014-04-10) -- "Spring Dance"
+Copyright (C) 2014 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> pkgname <- "party"
+> source(file.path(R.home("share"), "R", "examples-header.R"))
+> options(warn = 1)
+> library('party')
+Loading required package: grid
+Loading required package: zoo
+
+Attaching package: ‘zoo’
+
+The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+Loading required package: sandwich
+Loading required package: strucchange
+Loading required package: modeltools
+Loading required package: stats4
+> 
+> base::assign(".oldSearch", base::search(), pos = 'CheckExEnv')
+> cleanEx()
+> nameEx("BinaryTree-class")
+> ### * BinaryTree-class
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: BinaryTree Class
+> ### Title: Class "BinaryTree"
+> ### Aliases: BinaryTree-class weights weights-methods
+> ###   weights,BinaryTree-method show,BinaryTree-method where where-methods
+> ###   where,BinaryTree-method response response-methods
+> ###   response,BinaryTree-method nodes nodes-methods
+> ###   nodes,BinaryTree,integer-method nodes,BinaryTree,numeric-method
+> ###   treeresponse treeresponse-methods treeresponse,BinaryTree-method
+> ### Keywords: classes
+> 
+> ### ** Examples
+> 
+> 
+>   set.seed(290875)
+> 
+>   airq <- subset(airquality, !is.na(Ozone))
+>   airct <- ctree(Ozone ~ ., data = airq,   
++                  controls = ctree_control(maxsurrogate = 3))
+> 
+>   ### distribution of responses in the terminal nodes
+>   plot(airq$Ozone ~ as.factor(where(airct)))
+> 
+>   ### get all terminal nodes from the tree
+>   nodes(airct, unique(where(airct)))
+[[1]]
+5)*  weights = 48 
+
+[[2]]
+3)*  weights = 10 
+
+[[3]]
+6)*  weights = 21 
+
+[[4]]
+9)*  weights = 7 
+
+[[5]]
+8)*  weights = 30 
+
+> 
+>   ### extract weights and compute predictions
+>   pmean <- sapply(weights(airct), function(w) weighted.mean(airq$Ozone, w))
+> 
+>   ### the same as
+>   drop(Predict(airct))
+  [1] 18.47917 18.47917 18.47917 18.47917 18.47917 18.47917 18.47917 18.47917
+  [9] 55.60000 18.47917 18.47917 18.47917 18.47917 18.47917 18.47917 18.47917
+ [17] 18.47917 18.47917 18.47917 18.47917 18.47917 18.47917 18.47917 31.14286
+ [25] 55.60000 18.47917 31.14286 48.71429 48.71429 31.14286 18.47917 18.47917
+ [33] 18.47917 18.47917 18.47917 81.63333 81.63333 31.14286 81.63333 48.71429
+ [41] 81.63333 81.63333 81.63333 81.63333 18.47917 31.14286 31.14286 55.60000
+ [49] 31.14286 81.63333 81.63333 48.71429 55.60000 81.63333 81.63333 31.14286
+ [57] 48.71429 81.63333 81.63333 81.63333 31.14286 55.60000 31.14286 31.14286
+ [65] 81.63333 81.63333 81.63333 81.63333 81.63333 81.63333 48.71429 31.14286
+ [73] 31.14286 18.47917 55.60000 18.47917 31.14286 31.14286 18.47917 18.47917
+ [81] 31.14286 55.60000 81.63333 81.63333 81.63333 81.63333 81.63333 81.63333
+ [89] 81.63333 81.63333 81.63333 81.63333 48.71429 31.14286 31.14286 18.47917
+ [97] 18.47917 31.14286 18.47917 55.60000 18.47917 18.47917 55.60000 18.47917
+[105] 18.47917 18.47917 31.14286 18.47917 18.47917 31.14286 18.47917 18.47917
+[113] 55.60000 18.47917 18.47917 18.47917
+> 
+>   ### or
+>   unlist(treeresponse(airct))
+  [1] 18.47917 18.47917 18.47917 18.47917 18.47917 18.47917 18.47917 18.47917
+  [9] 55.60000 18.47917 18.47917 18.47917 18.47917 18.47917 18.47917 18.47917
+ [17] 18.47917 18.47917 18.47917 18.47917 18.47917 18.47917 18.47917 31.14286
+ [25] 55.60000 18.47917 31.14286 48.71429 48.71429 31.14286 18.47917 18.47917
+ [33] 18.47917 18.47917 18.47917 81.63333 81.63333 31.14286 81.63333 48.71429
+ [41] 81.63333 81.63333 81.63333 81.63333 18.47917 31.14286 31.14286 55.60000
+ [49] 31.14286 81.63333 81.63333 48.71429 55.60000 81.63333 81.63333 31.14286
+ [57] 48.71429 81.63333 81.63333 81.63333 31.14286 55.60000 31.14286 31.14286
+ [65] 81.63333 81.63333 81.63333 81.63333 81.63333 81.63333 48.71429 31.14286
+ [73] 31.14286 18.47917 55.60000 18.47917 31.14286 31.14286 18.47917 18.47917
+ [81] 31.14286 55.60000 81.63333 81.63333 81.63333 81.63333 81.63333 81.63333
+ [89] 81.63333 81.63333 81.63333 81.63333 48.71429 31.14286 31.14286 18.47917
+ [97] 18.47917 31.14286 18.47917 55.60000 18.47917 18.47917 55.60000 18.47917
+[105] 18.47917 18.47917 31.14286 18.47917 18.47917 31.14286 18.47917 18.47917
+[113] 55.60000 18.47917 18.47917 18.47917
+> 
+>   ### don't use the mean but the median as prediction in each terminal node
+>   pmedian <- sapply(weights(airct), function(w) 
++                  median(airq$Ozone[rep(1:nrow(airq), w)]))
+> 
+>   plot(airq$Ozone, pmean, col = "red")
+>   points(airq$Ozone, pmedian, col = "blue")
+> 
+> 
+> 
+> cleanEx()
+> nameEx("RandomForest-class")
+> ### * RandomForest-class
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: RandomForest-class
+> ### Title: Class "RandomForest"
+> ### Aliases: RandomForest-class treeresponse,RandomForest-method
+> ###   weights,RandomForest-method where,RandomForest-method
+> ###   show,RandomForest-method
+> ### Keywords: classes
+> 
+> ### ** Examples
+> 
+> 
+>     set.seed(290875)
+> 
+>     ### honest (i.e., out-of-bag) cross-classification of 
+>     ### true vs. predicted classes
+>     data("mammoexp", package = "TH.data")
+>     table(mammoexp$ME, predict(cforest(ME ~ ., data = mammoexp, 
++                                control = cforest_unbiased(ntree = 50)), 
++                                OOB = TRUE))
+               
+                Never Within a Year Over a Year
+  Never           193            28          13
+  Within a Year    60            43           1
+  Over a Year      56            18           0
+> 
+> 
+> 
+> cleanEx()
+> nameEx("Transformations")
+> ### * Transformations
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: Transformations
+> ### Title: Function for Data Transformations
+> ### Aliases: ptrafo ff_trafo
+> ### Keywords: manip
+> 
+> ### ** Examples
+> 
+> 
+>   ### rank a variable
+>   ptrafo(data.frame(y = 1:20), 
++          numeric_trafo = function(x) rank(x, na.last = "keep"))
+        
+ [1,]  1
+ [2,]  2
+ [3,]  3
+ [4,]  4
+ [5,]  5
+ [6,]  6
+ [7,]  7
+ [8,]  8
+ [9,]  9
+[10,] 10
+[11,] 11
+[12,] 12
+[13,] 13
+[14,] 14
+[15,] 15
+[16,] 16
+[17,] 17
+[18,] 18
+[19,] 19
+[20,] 20
+attr(,"assign")
+[1] 1
+> 
+>   ### dummy coding of a factor
+>   ptrafo(data.frame(y = gl(3, 9)))
+   1 2 3
+1  1 0 0
+2  1 0 0
+3  1 0 0
+4  1 0 0
+5  1 0 0
+6  1 0 0
+7  1 0 0
+8  1 0 0
+9  1 0 0
+10 0 1 0
+11 0 1 0
+12 0 1 0
+13 0 1 0
+14 0 1 0
+15 0 1 0
+16 0 1 0
+17 0 1 0
+18 0 1 0
+19 0 0 1
+20 0 0 1
+21 0 0 1
+22 0 0 1
+23 0 0 1
+24 0 0 1
+25 0 0 1
+26 0 0 1
+27 0 0 1
+attr(,"assign")
+[1] 1 1 1
+> 
+> 
+> 
+> 
+> cleanEx()
+> nameEx("cforest")
+> ### * cforest
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: cforest
+> ### Title: Random Forest
+> ### Aliases: cforest proximity
+> ### Keywords: tree
+> 
+> ### ** Examples
+> 
+> 
+>     set.seed(290875)
+> 
+>     ### honest (i.e., out-of-bag) cross-classification of
+>     ### true vs. predicted classes
+>     data("mammoexp", package = "TH.data")
+>     table(mammoexp$ME, predict(cforest(ME ~ ., data = mammoexp, 
++                                control = cforest_unbiased(ntree = 50)),
++                                OOB = TRUE))
+               
+                Never Within a Year Over a Year
+  Never           193            28          13
+  Within a Year    60            43           1
+  Over a Year      56            18           0
+> 
+>     ### fit forest to censored response
+>     if (require("TH.data") && require("survival")) {
++ 
++         data("GBSG2", package = "TH.data")
++         bst <- cforest(Surv(time, cens) ~ ., data = GBSG2, 
++                    control = cforest_unbiased(ntree = 50))
++ 
++         ### estimate conditional Kaplan-Meier curves
++         treeresponse(bst, newdata = GBSG2[1:2,], OOB = TRUE)
++ 
++         ### if you can't resist to look at individual trees ...
++         party:::prettytree(bst@ensemble[[1]], names(bst@data@get("input")))
++     }
+Loading required package: TH.data
+Loading required package: survival
+Loading required package: splines
+1) pnodes <= 3; criterion = 1, statistic = 37.638
+  2) horTh == {}; criterion = 0.986, statistic = 6.053
+    3) menostat == {}; criterion = 0.895, statistic = 2.635
+      4) tgrade <= 1; criterion = 0.58, statistic = 0.65
+        5)*  weights = 0 
+      4) tgrade > 1
+        6) progrec <= 206; criterion = 0.874, statistic = 2.337
+          7) pnodes <= 1; criterion = 0.494, statistic = 0.442
+            8) estrec <= 5; criterion = 0.579, statistic = 0.647
+              9)*  weights = 0 
+            8) estrec > 5
+              10) progrec <= 16; criterion = 0.688, statistic = 1.02
+                11)*  weights = 0 
+              10) progrec > 16
+                12)*  weights = 0 
+          7) pnodes > 1
+            13) pnodes <= 2; criterion = 0.324, statistic = 0.246
+              14)*  weights = 0 
+            13) pnodes > 2
+              15)*  weights = 0 
+        6) progrec > 206
+          16)*  weights = 0 
+    3) menostat == {}
+      17) tsize <= 19; criterion = 0.541, statistic = 0.548
+        18) age <= 45; criterion = 0.979, statistic = 5.301
+          19)*  weights = 0 
+        18) age > 45
+          20)*  weights = 0 
+      17) tsize > 19
+        21) age <= 37; criterion = 0.943, statistic = 3.631
+          22)*  weights = 0 
+        21) age > 37
+          23) pnodes <= 2; criterion = 0.951, statistic = 3.866
+            24) age <= 49; criterion = 0.913, statistic = 2.922
+              25) tsize <= 23; criterion = 0.606, statistic = 0.728
+                26)*  weights = 0 
+              25) tsize > 23
+                27)*  weights = 0 
+            24) age > 49
+              28)*  weights = 0 
+          23) pnodes > 2
+            29)*  weights = 0 
+  2) horTh == {}
+    30) progrec <= 74; criterion = 0.895, statistic = 2.634
+      31) pnodes <= 2; criterion = 0.989, statistic = 6.497
+        32) tsize <= 28; criterion = 0.769, statistic = 2.556
+          33)*  weights = 0 
+        32) tsize > 28
+          34)*  weights = 0 
+      31) pnodes > 2
+        35)*  weights = 0 
+    30) progrec > 74
+      36) pnodes <= 1; criterion = 0.853, statistic = 2.099
+        37) estrec <= 109; criterion = 0.482, statistic = 0.417
+          38)*  weights = 0 
+        37) estrec > 109
+          39)*  weights = 0 
+      36) pnodes > 1
+        40)*  weights = 0 
+1) pnodes > 3
+  41) horTh == {}; criterion = 0.981, statistic = 5.458
+    42) estrec <= 79; criterion = 0.997, statistic = 8.922
+      43) progrec <= 132; criterion = 0.981, statistic = 5.529
+        44) menostat == {}; criterion = 0.772, statistic = 1.452
+          45) progrec <= 20; criterion = 0.502, statistic = 0.46
+            46) estrec <= 1; criterion = 0.466, statistic = 0.386
+              47)*  weights = 0 
+            46) estrec > 1
+              48)*  weights = 0 
+          45) progrec > 20
+            49)*  weights = 0 
+        44) menostat == {}
+          50) age <= 60; criterion = 0.953, statistic = 3.945
+            51)*  weights = 0 
+          50) age > 60
+            52)*  weights = 0 
+      43) progrec > 132
+        53)*  weights = 0 
+    42) estrec > 79
+      54) tsize <= 21; criterion = 0.641, statistic = 1.879
+        55)*  weights = 0 
+      54) tsize > 21
+        56)*  weights = 0 
+  41) horTh == {}
+    57) tgrade <= 2; criterion = 0.97, statistic = 4.689
+      58) age <= 53; criterion = 0.96, statistic = 4.238
+        59) tsize <= 37; criterion = 0.827, statistic = 1.856
+          60)*  weights = 0 
+        59) tsize > 37
+          61)*  weights = 0 
+      58) age > 53
+        62) progrec <= 113; criterion = 0.78, statistic = 1.506
+          63) tsize <= 30; criterion = 0.809, statistic = 1.713
+            64)*  weights = 0 
+          63) tsize > 30
+            65)*  weights = 0 
+        62) progrec > 113
+          66)*  weights = 0 
+    57) tgrade > 2
+      67) progrec <= 10; criterion = 0.974, statistic = 4.963
+        68)*  weights = 0 
+      67) progrec > 10
+        69)*  weights = 0 
+> 
+>     ### proximity, see ?randomForest
+>     iris.cf <- cforest(Species ~ ., data = iris, 
++                        control = cforest_unbiased(mtry = 2))
+>     iris.mds <- cmdscale(1 - proximity(iris.cf), eig = TRUE)
+>     op <- par(pty="s")
+>     pairs(cbind(iris[,1:4], iris.mds$points), cex = 0.6, gap = 0, 
++           col = c("red", "green", "blue")[as.numeric(iris$Species)],
++           main = "Iris Data: Predictors and MDS of Proximity Based on cforest")
+>     par(op)
+> 
+> 
+> 
+> 
+> graphics::par(get("par.postscript", pos = 'CheckExEnv'))
+> cleanEx()
+
+detaching ‘package:survival’, ‘package:splines’, ‘package:TH.data’
+
+> nameEx("ctree")
+> ### * ctree
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: Conditional Inference Trees
+> ### Title: Conditional Inference Trees
+> ### Aliases: ctree conditionalTree
+> ### Keywords: tree
+> 
+> ### ** Examples
+> 
+> 
+>     set.seed(290875)
+> 
+>     ### regression
+>     airq <- subset(airquality, !is.na(Ozone))
+>     airct <- ctree(Ozone ~ ., data = airq, 
++                    controls = ctree_control(maxsurrogate = 3))
+>     airct
+
+	 Conditional inference tree with 5 terminal nodes
+
+Response:  Ozone 
+Inputs:  Solar.R, Wind, Temp, Month, Day 
+Number of observations:  116 
+
+1) Temp <= 82; criterion = 1, statistic = 56.086
+  2) Wind <= 6.9; criterion = 0.998, statistic = 12.969
+    3)*  weights = 10 
+  2) Wind > 6.9
+    4) Temp <= 77; criterion = 0.997, statistic = 11.599
+      5)*  weights = 48 
+    4) Temp > 77
+      6)*  weights = 21 
+1) Temp > 82
+  7) Wind <= 10.3; criterion = 0.997, statistic = 11.712
+    8)*  weights = 30 
+  7) Wind > 10.3
+    9)*  weights = 7 
+>     plot(airct)
+>     mean((airq$Ozone - predict(airct))^2)
+[1] 403.6668
+>     ### extract terminal node ID, two ways
+>     all.equal(predict(airct, type = "node"), where(airct))
+[1] TRUE
+> 
+>     ### classification
+>     irisct <- ctree(Species ~ .,data = iris)
+>     irisct
+
+	 Conditional inference tree with 4 terminal nodes
+
+Response:  Species 
+Inputs:  Sepal.Length, Sepal.Width, Petal.Length, Petal.Width 
+Number of observations:  150 
+
+1) Petal.Length <= 1.9; criterion = 1, statistic = 140.264
+  2)*  weights = 50 
+1) Petal.Length > 1.9
+  3) Petal.Width <= 1.7; criterion = 1, statistic = 67.894
+    4) Petal.Length <= 4.8; criterion = 0.999, statistic = 13.865
+      5)*  weights = 46 
+    4) Petal.Length > 4.8
+      6)*  weights = 8 
+  3) Petal.Width > 1.7
+    7)*  weights = 46 
+>     plot(irisct)
+>     table(predict(irisct), iris$Species)
+            
+             setosa versicolor virginica
+  setosa         50          0         0
+  versicolor      0         49         5
+  virginica       0          1        45
+> 
+>     ### estimated class probabilities, a list
+>     tr <- treeresponse(irisct, newdata = iris[1:10,])
+> 
+>     ### ordinal regression
+>     data("mammoexp", package = "TH.data")
+>     mammoct <- ctree(ME ~ ., data = mammoexp) 
+>     plot(mammoct)
+> 
+>     ### estimated class probabilities
+>     treeresponse(mammoct, newdata = mammoexp[1:10,])
+[[1]]
+[1] 0.3990385 0.3798077 0.2211538
+
+[[2]]
+[1] 0.84070796 0.05309735 0.10619469
+
+[[3]]
+[1] 0.3990385 0.3798077 0.2211538
+
+[[4]]
+[1] 0.6153846 0.2087912 0.1758242
+
+[[5]]
+[1] 0.3990385 0.3798077 0.2211538
+
+[[6]]
+[1] 0.3990385 0.3798077 0.2211538
+
+[[7]]
+[1] 0.3990385 0.3798077 0.2211538
+
+[[8]]
+[1] 0.3990385 0.3798077 0.2211538
+
+[[9]]
+[1] 0.84070796 0.05309735 0.10619469
+
+[[10]]
+[1] 0.3990385 0.3798077 0.2211538
+
+> 
+>     ### survival analysis
+>     if (require("TH.data") && require("survival")) {
++         data("GBSG2", package = "TH.data")
++         GBSG2ct <- ctree(Surv(time, cens) ~ .,data = GBSG2)
++         plot(GBSG2ct)
++         treeresponse(GBSG2ct, newdata = GBSG2[1:2,])        
++     }
+Loading required package: TH.data
+Loading required package: survival
+Loading required package: splines
+[[1]]
+Call: survfit(formula = y ~ 1, weights = weights)
+
+records   n.max n.start  events  median 0.95LCL 0.95UCL 
+    248     248     248      88    2093    1814      NA 
+
+[[2]]
+Call: survfit(formula = y ~ 1, weights = weights)
+
+records   n.max n.start  events  median 0.95LCL 0.95UCL 
+    166     166     166      77    1701    1174    2018 
+
+> 
+>     ### if you are interested in the internals:
+>     ### generate doxygen documentation
+>     ## Not run: 
+> ##D 
+> ##D         ### download src package into temp dir
+> ##D         tmpdir <- tempdir()
+> ##D         tgz <- download.packages("party", destdir = tmpdir)[2]
+> ##D         ### extract
+> ##D         untar(tgz, exdir = tmpdir)
+> ##D         wd <- setwd(file.path(tmpdir, "party"))
+> ##D         ### run doxygen (assuming it is there)
+> ##D         system("doxygen inst/doxygen.cfg")
+> ##D         setwd(wd)
+> ##D         ### have fun
+> ##D         browseURL(file.path(tmpdir, "party", "inst", 
+> ##D                             "documentation", "html", "index.html")) 
+> ##D     
+> ## End(Not run)
+> 
+> 
+> 
+> cleanEx()
+
+detaching ‘package:survival’, ‘package:splines’, ‘package:TH.data’
+
+> nameEx("ctree_memory")
+> ### * ctree_memory
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: Memory Allocation
+> ### Title: Memory Allocation
+> ### Aliases: ctree_memory
+> ### Keywords: misc
+> 
+> ### ** Examples
+> 
+> 
+>     set.seed(290875)
+> 
+>     ### setup learning sample
+>     airq <- subset(airquality, !is.na(Ozone))
+>     ls <- dpp(conditionalTree, Ozone ~ ., data = airq)
+> 
+>     ### setup memory and controls 
+>     mem <- ctree_memory(ls)
+>     ct <- ctree_control(teststat = "max")
+> 
+>     ### fit 50 trees on bootstrap samples
+>     bs <- rmultinom(50, nrow(airq), rep(1, nrow(airq))/nrow(airq))
+>     storage.mode(bs) <- "double"
+>     cfit <- conditionalTree@fit
+>     ens <- apply(bs, 2, function(w) cfit(ls, ct, weights = w, 
++                                          fitmem = mem))
+> 
+> 
+> 
+> 
+> cleanEx()
+> nameEx("mob")
+> ### * mob
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: mob
+> ### Title: Model-based Recursive Partitioning
+> ### Aliases: mob mob-class coef.mob deviance.mob fitted.mob logLik.mob
+> ###   predict.mob print.mob residuals.mob sctest.mob summary.mob
+> ###   weights.mob
+> ### Keywords: tree
+> 
+> ### ** Examples
+> 
+> 
+> set.seed(290875)
+> 
+> if(require("mlbench")) {
++ 
++ ## recursive partitioning of a linear regression model
++ ## load data
++ data("BostonHousing", package = "mlbench")
++ ## and transform variables appropriately (for a linear regression)
++ BostonHousing$lstat <- log(BostonHousing$lstat)
++ BostonHousing$rm <- BostonHousing$rm^2
++ ## as well as partitioning variables (for fluctuation testing)
++ BostonHousing$chas <- factor(BostonHousing$chas, levels = 0:1, 
++                              labels = c("no", "yes"))
++ BostonHousing$rad <- factor(BostonHousing$rad, ordered = TRUE)
++ 
++ ## partition the linear regression model medv ~ lstat + rm
++ ## with respect to all remaining variables:
++ fmBH <- mob(medv ~ lstat + rm | zn + indus + chas + nox + age + 
++                                 dis + rad + tax + crim + b + ptratio,
++   control = mob_control(minsplit = 40), data = BostonHousing, 
++   model = linearModel)
++ 
++ ## print the resulting tree
++ fmBH
++ ## or better visualize it
++ plot(fmBH)
++ 
++ ## extract coefficients in all terminal nodes
++ coef(fmBH)
++ ## look at full summary, e.g., for node 7
++ summary(fmBH, node = 7)
++ ## results of parameter stability tests for that node
++ sctest(fmBH, node = 7)
++ ## -> no further significant instabilities (at 5% level)
++ 
++ ## compute mean squared error (on training data)
++ mean((BostonHousing$medv - fitted(fmBH))^2)
++ mean(residuals(fmBH)^2)
++ deviance(fmBH)/sum(weights(fmBH))
++ 
++ ## evaluate logLik and AIC
++ logLik(fmBH)
++ AIC(fmBH)
++ ## (Note that this penalizes estimation of error variances, which
++ ## were treated as nuisance parameters in the fitting process.)
++ 
++ 
++ ## recursive partitioning of a logistic regression model
++ ## load data
++ data("PimaIndiansDiabetes", package = "mlbench")
++ ## partition logistic regression diabetes ~ glucose 
++ ## wth respect to all remaining variables
++ fmPID <- mob(diabetes ~ glucose | pregnant + pressure + triceps + 
++                                   insulin + mass + pedigree + age,
++   data = PimaIndiansDiabetes, model = glinearModel, 
++   family = binomial())
++ 
++ ## fitted model
++ coef(fmPID)
++ plot(fmPID)
++ plot(fmPID, tp_args = list(cdplot = TRUE))
++ }
+Loading required package: mlbench
+Loading required package: vcd
+> 
+> 
+> 
+> cleanEx()
+
+detaching ‘package:vcd’, ‘package:mlbench’
+
+> nameEx("panelfunctions")
+> ### * panelfunctions
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: Panel Generating Functions
+> ### Title: Panel-Generators for Visualization of Party Trees
+> ### Aliases: node_inner node_terminal edge_simple node_surv node_barplot
+> ###   node_boxplot node_hist node_density node_scatterplot node_bivplot
+> ### Keywords: hplot
+> 
+> ### ** Examples
+> 
+> 
+>   set.seed(290875)
+> 
+>   airq <- subset(airquality, !is.na(Ozone))
+>   airct <- ctree(Ozone ~ ., data = airq)
+> 
+>   ## default: boxplots
+>   plot(airct)
+>   
+>   ## change colors
+>   plot(airct, tp_args = list(col = "blue", fill = hsv(2/3, 0.5, 1)))
+>   ## equivalent to
+>   plot(airct, terminal_panel = node_boxplot(airct, col = "blue", 
++                                             fill = hsv(2/3, 0.5, 1)))
+> 
+>   ### very simple; the mean is given in each terminal node
+>   plot(airct, type = "simple")
+> 
+>   ### density estimates
+>   plot(airct, terminal_panel = node_density)
+>     
+>   ### histograms 
+>   plot(airct, terminal_panel = node_hist(airct, ymax = 0.06, 
++                                          xscale = c(0, 250)))
+> 
+> 
+> 
+> cleanEx()
+> nameEx("plot.BinaryTree")
+> ### * plot.BinaryTree
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: Plot BinaryTree
+> ### Title: Visualization of Binary Regression Trees
+> ### Aliases: plot.BinaryTree
+> ### Keywords: hplot
+> 
+> ### ** Examples
+> 
+> 
+>   set.seed(290875)
+> 
+>   airq <- subset(airquality, !is.na(Ozone))
+>   airct <- ctree(Ozone ~ ., data = airq)
+> 
+>   ### regression: boxplots in each node
+>   plot(airct, terminal_panel = node_boxplot, drop_terminal = TRUE)
+> 
+>   if(require("TH.data")) {
++   ## classification: barplots in each node
++   data("GlaucomaM", package = "TH.data")
++   glauct <- ctree(Class ~ ., data = GlaucomaM)
++   plot(glauct)
++   plot(glauct, inner_panel = node_barplot,
++     edge_panel = function(ctreeobj, ...) { function(...) invisible() },
++     tnex = 1)
++ 
++   ## survival: Kaplan-Meier curves in each node
++   data("GBSG2", package = "TH.data")
++   library("survival")
++   gbsg2ct <- ctree(Surv(time, cens) ~ ., data = GBSG2)
++   plot(gbsg2ct)
++   plot(gbsg2ct, type = "simple")  
++   }
+Loading required package: TH.data
+Loading required package: splines
+> 
+> 
+> 
+> 
+> cleanEx()
+
+detaching ‘package:survival’, ‘package:splines’, ‘package:TH.data’
+
+> nameEx("plot.mob")
+> ### * plot.mob
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: plot.mob
+> ### Title: Visualization of MOB Trees
+> ### Aliases: plot.mob
+> ### Keywords: hplot
+> 
+> ### ** Examples
+> 
+> 
+> set.seed(290875)
+> 
+> if(require("mlbench")) {
++ 
++ ## recursive partitioning of a linear regression model
++ ## load data
++ data("BostonHousing", package = "mlbench")
++ ## and transform variables appropriately (for a linear regression)
++ BostonHousing$lstat <- log(BostonHousing$lstat)
++ BostonHousing$rm <- BostonHousing$rm^2
++ ## as well as partitioning variables (for fluctuation testing)
++ BostonHousing$chas <- factor(BostonHousing$chas, levels = 0:1, 
++                              labels = c("no", "yes"))
++ BostonHousing$rad <- factor(BostonHousing$rad, ordered = TRUE)
++ 
++ ## partition the linear regression model medv ~ lstat + rm
++ ## with respect to all remaining variables:
++ fm <- mob(medv ~ lstat + rm | zn + indus + chas + nox + age + dis + 
++                               rad + tax + crim + b + ptratio,
++   control = mob_control(minsplit = 40), data = BostonHousing, 
++   model = linearModel)
++ 
++ ## visualize medv ~ lstat and medv ~ rm
++ plot(fm)
++ 
++ ## visualize only one of the two regressors
++ plot(fm, tp_args = list(which = "lstat"), tnex = 2)
++ plot(fm, tp_args = list(which = 2), tnex = 2)
++ 
++ ## omit fitted mean lines
++ plot(fm, tp_args = list(fitmean = FALSE))
++ 
++ ## mixed numerical and categorical regressors 
++ fm2 <- mob(medv ~ lstat + rm + chas | zn + indus + nox + age + 
++                                       dis + rad,
++   control = mob_control(minsplit = 100), data = BostonHousing, 
++   model = linearModel)
++ plot(fm2)
++ 
++ ## recursive partitioning of a logistic regression model
++ data("PimaIndiansDiabetes", package = "mlbench")
++ fmPID <- mob(diabetes ~ glucose | pregnant + pressure + triceps + 
++                                   insulin + mass + pedigree + age,
++   data = PimaIndiansDiabetes, model = glinearModel, 
++   family = binomial())
++ ## default plot: spinograms with breaks from five point summary
++ plot(fmPID)
++ ## use the breaks from hist() instead
++ plot(fmPID, tp_args = list(fivenum = FALSE))
++ ## user-defined breaks
++ plot(fmPID, tp_args = list(breaks = 0:4 * 50))
++ ## CD plots instead of spinograms
++ plot(fmPID, tp_args = list(cdplot = TRUE))
++ ## different smoothing bandwidth
++ plot(fmPID, tp_args = list(cdplot = TRUE, bw = 15))
++ 
++ }
+Loading required package: mlbench
+Loading required package: vcd
+> 
+> 
+> 
+> cleanEx()
+
+detaching ‘package:vcd’, ‘package:mlbench’
+
+> nameEx("readingSkills")
+> ### * readingSkills
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: readingSkills
+> ### Title: Reading Skills
+> ### Aliases: readingSkills
+> ### Keywords: datasets
+> 
+> ### ** Examples
+> 
+> 
+>    set.seed(290875)
+>    readingSkills.cf <- cforest(score ~ ., data = readingSkills,
++        control = cforest_unbiased(mtry = 2, ntree = 50))
+> 
+>    # standard importance
+>    varimp(readingSkills.cf)
+nativeSpeaker           age      shoeSize 
+     12.69213      82.26737      13.60017 
+>    # the same modulo random variation
+>    varimp(readingSkills.cf, pre1.0_0 = TRUE)
+nativeSpeaker           age      shoeSize 
+     13.06254      80.44754      14.38979 
+> 
+>    # conditional importance, may take a while...
+>    varimp(readingSkills.cf, conditional = TRUE) 
+nativeSpeaker           age      shoeSize 
+    11.870034     52.114547      1.461803 
+> 
+> 
+> 
+> 
+> cleanEx()
+> nameEx("reweight")
+> ### * reweight
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: reweight
+> ### Title: Re-fitting Models with New Weights
+> ### Aliases: reweight reweight.linearModel reweight.glinearModel
+> ### Keywords: regression
+> 
+> ### ** Examples
+> 
+>   ## fit cars regression
+>   mf <- dpp(linearModel, dist ~ speed, data = cars)
+>   fm <- fit(linearModel, mf)
+>   fm
+Linear model with coefficients:
+(Intercept)        speed  
+    -17.579        3.932  
+>   
+>   ## re-fit, excluding the last 4 observations
+>   ww <- c(rep(1, 46), rep(0, 4))
+>   reweight(fm, ww)
+Linear model with coefficients:
+(Intercept)        speed  
+     -8.723        3.210  
+> 
+> 
+> 
+> cleanEx()
+> nameEx("varimp")
+> ### * varimp
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: varimp
+> ### Title: Variable Importance
+> ### Aliases: varimp varimpAUC
+> ### Keywords: tree
+> 
+> ### ** Examples
+> 
+>     
+>    set.seed(290875)
+>    readingSkills.cf <- cforest(score ~ ., data = readingSkills, 
++        control = cforest_unbiased(mtry = 2, ntree = 50))
+> 
+>    # standard importance
+>    varimp(readingSkills.cf)
+nativeSpeaker           age      shoeSize 
+     12.69213      82.26737      13.60017 
+>    # the same modulo random variation
+>    varimp(readingSkills.cf, pre1.0_0 = TRUE)
+nativeSpeaker           age      shoeSize 
+     13.06254      80.44754      14.38979 
+> 
+>    # conditional importance, may take a while...
+>    varimp(readingSkills.cf, conditional = TRUE)
+nativeSpeaker           age      shoeSize 
+    11.870034     52.114547      1.461803 
+> 
+>    ## Not run: 
+> ##D    data("GBSG2", package = "TH.data")
+> ##D    ### add a random covariate for sanity check
+> ##D    set.seed(29)
+> ##D    GBSG2$rand <- runif(nrow(GBSG2))
+> ##D    object <- cforest(Surv(time, cens) ~ ., data = GBSG2, 
+> ##D                      control = cforest_unbiased(ntree = 20)) 
+> ##D    vi <- varimp(object)
+> ##D    ### compare variable importances and absolute z-statistics
+> ##D    layout(matrix(1:2))
+> ##D    barplot(vi)
+> ##D    barplot(abs(summary(coxph(Surv(time, cens) ~ ., data = GBSG2))$coeff[,"z"]))
+> ##D    ### looks more or less the same
+> ##D    
+> ## End(Not run)
+> 
+> 
+> 
+> ### * <FOOTER>
+> ###
+> options(digits = 7L)
+> base::cat("Time elapsed: ", proc.time() - base::get("ptime", pos = 'CheckExEnv'),"\n")
+Time elapsed:  12.888 0.188 13.098 0 0 
+> grDevices::dev.off()
+null device 
+          1 
+> ###
+> ### Local variables: ***
+> ### mode: outline-minor ***
+> ### outline-regexp: "\\(> \\)?### [*]+" ***
+> ### End: ***
+> quit('no')

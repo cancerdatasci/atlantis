@@ -1,0 +1,295 @@
+
+R Under development (unstable) (2014-06-29 r66051) -- "Unsuffered Consequences"
+Copyright (C) 2014 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> set.seed(290875)
+> library("party")
+Loading required package: grid
+Loading required package: zoo
+
+Attaching package: 'zoo'
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric
+
+Loading required package: sandwich
+Loading required package: strucchange
+Loading required package: modeltools
+Loading required package: stats4
+> if (!require("TH.data"))
++     stop("cannot load package TH.data")
+Loading required package: TH.data
+> if (!require("coin"))
++     stop("cannot load package coin")
+Loading required package: coin
+Loading required package: survival
+Loading required package: splines
+> 
+> ### get rid of the NAMESPACE
+> attach(asNamespace("party"))
+The following objects are masked from package:party:
+
+    cforest, cforest_classical, cforest_control, cforest_unbiased,
+    conditionalTree, ctree, ctree_control, ctree_memory, edge_simple,
+    mob, mob_control, node_barplot, node_bivplot, node_boxplot,
+    node_density, node_hist, node_inner, node_scatterplot, node_surv,
+    node_terminal, proximity, ptrafo, reweight, sctest.mob, varimp,
+    varimpAUC
+
+> 
+> gtctrl <- new("GlobalTestControl")
+> tlev <- levels(gtctrl@testtype)
+> 
+> data(GlaucomaM, package = "TH.data")
+> gtree <- ctree(Class ~ ., data = GlaucomaM)
+> tree <- gtree@tree
+> stopifnot(isequal(tree[[5]][[3]], 0.059))
+> predict(gtree)
+  [1] normal   normal   normal   normal   normal   normal   normal   normal  
+  [9] normal   normal   normal   glaucoma normal   normal   normal   normal  
+ [17] normal   normal   normal   normal   normal   normal   normal   normal  
+ [25] normal   normal   normal   normal   normal   normal   normal   normal  
+ [33] normal   normal   glaucoma normal   normal   normal   normal   normal  
+ [41] normal   normal   glaucoma normal   normal   normal   normal   normal  
+ [49] normal   normal   normal   normal   normal   normal   normal   normal  
+ [57] normal   normal   normal   normal   normal   normal   normal   normal  
+ [65] normal   normal   normal   normal   normal   glaucoma normal   normal  
+ [73] normal   normal   normal   normal   normal   normal   normal   normal  
+ [81] glaucoma normal   normal   normal   normal   normal   normal   normal  
+ [89] normal   normal   normal   normal   normal   normal   normal   normal  
+ [97] normal   normal   glaucoma glaucoma glaucoma glaucoma normal   normal  
+[105] normal   normal   normal   glaucoma glaucoma normal   glaucoma glaucoma
+[113] glaucoma glaucoma glaucoma glaucoma glaucoma normal   normal   glaucoma
+[121] glaucoma glaucoma glaucoma glaucoma glaucoma glaucoma normal   glaucoma
+[129] normal   glaucoma normal   glaucoma glaucoma glaucoma glaucoma glaucoma
+[137] glaucoma glaucoma glaucoma glaucoma glaucoma glaucoma glaucoma glaucoma
+[145] glaucoma glaucoma normal   glaucoma glaucoma glaucoma glaucoma normal  
+[153] glaucoma glaucoma glaucoma glaucoma normal   glaucoma glaucoma glaucoma
+[161] glaucoma glaucoma normal   normal   glaucoma glaucoma normal   glaucoma
+[169] glaucoma glaucoma glaucoma glaucoma normal   glaucoma glaucoma glaucoma
+[177] normal   glaucoma normal   glaucoma glaucoma glaucoma normal   glaucoma
+[185] glaucoma glaucoma normal   glaucoma glaucoma normal   glaucoma normal  
+[193] glaucoma glaucoma glaucoma glaucoma
+Levels: glaucoma normal
+> 
+> # print(tree)
+> 
+> stump <- ctree(Class ~ ., data = GlaucomaM, 
++                control = ctree_control(stump = TRUE))
+> print(stump)
+
+	 Conditional inference tree with 2 terminal nodes
+
+Response:  Class 
+Inputs:  ag, at, as, an, ai, eag, eat, eas, ean, eai, abrg, abrt, abrs, abrn, abri, hic, mhcg, mhct, mhcs, mhcn, mhci, phcg, phct, phcs, phcn, phci, hvc, vbsg, vbst, vbss, vbsn, vbsi, vasg, vast, vass, vasn, vasi, vbrg, vbrt, vbrs, vbrn, vbri, varg, vart, vars, varn, vari, mdg, mdt, mds, mdn, mdi, tmg, tmt, tms, tmn, tmi, mr, rnf, mdic, emd, mv 
+Number of observations:  196 
+
+1) vari <= 0.059; criterion = 1, statistic = 71.475
+  2)*  weights = 87 
+1) vari > 0.059
+  3)*  weights = 109 
+> 
+> data(treepipit, package = "coin")
+> 
+> tr <- ctree(counts ~ ., data = treepipit)
+> tr
+
+	 Conditional inference tree with 2 terminal nodes
+
+Response:  counts 
+Inputs:  age, coverstorey, coverregen, meanregen, coniferous, deadtree, cbpiles, ivytree, fdist 
+Number of observations:  86 
+
+1) coverstorey <= 40; criterion = 0.998, statistic = 13.678
+  2)*  weights = 24 
+1) coverstorey > 40
+  3)*  weights = 62 
+> plot(tr)
+> 
+> 
+> data(GlaucomaM, package = "TH.data")
+> 
+> tr <- ctree(Class ~ ., data = GlaucomaM)
+> tr
+
+	 Conditional inference tree with 4 terminal nodes
+
+Response:  Class 
+Inputs:  ag, at, as, an, ai, eag, eat, eas, ean, eai, abrg, abrt, abrs, abrn, abri, hic, mhcg, mhct, mhcs, mhcn, mhci, phcg, phct, phcs, phcn, phci, hvc, vbsg, vbst, vbss, vbsn, vbsi, vasg, vast, vass, vasn, vasi, vbrg, vbrt, vbrs, vbrn, vbri, varg, vart, vars, varn, vari, mdg, mdt, mds, mdn, mdi, tmg, tmt, tms, tmn, tmi, mr, rnf, mdic, emd, mv 
+Number of observations:  196 
+
+1) vari <= 0.059; criterion = 1, statistic = 71.475
+  2) vasg <= 0.066; criterion = 1, statistic = 29.265
+    3)*  weights = 79 
+  2) vasg > 0.066
+    4)*  weights = 8 
+1) vari > 0.059
+  5) tms <= -0.066; criterion = 0.951, statistic = 11.221
+    6)*  weights = 65 
+  5) tms > -0.066
+    7)*  weights = 44 
+> plot(tr)
+> 
+> data(GBSG2, package = "TH.data")  
+> 
+> GBSG2tree <- ctree(Surv(time, cens) ~ ., data = GBSG2)
+> GBSG2tree
+
+	 Conditional inference tree with 4 terminal nodes
+
+Response:  Surv(time, cens) 
+Inputs:  horTh, age, menostat, tsize, tgrade, pnodes, progrec, estrec 
+Number of observations:  686 
+
+1) pnodes <= 3; criterion = 1, statistic = 56.156
+  2) horTh == {no}; criterion = 0.965, statistic = 8.113
+    3)*  weights = 248 
+  2) horTh == {yes}
+    4)*  weights = 128 
+1) pnodes > 3
+  5) progrec <= 20; criterion = 0.999, statistic = 14.941
+    6)*  weights = 144 
+  5) progrec > 20
+    7)*  weights = 166 
+> plot(GBSG2tree)
+> plot(GBSG2tree, terminal_panel = node_surv(GBSG2tree))
+> survfit(Surv(time, cens) ~ as.factor(GBSG2tree@where), data = GBSG2)
+Call: survfit(formula = Surv(time, cens) ~ as.factor(GBSG2tree@where), 
+    data = GBSG2)
+
+                             records n.max n.start events median 0.95LCL
+as.factor(GBSG2tree@where)=3     248   248     248     88   2093    1814
+as.factor(GBSG2tree@where)=4     128   128     128     31     NA    2372
+as.factor(GBSG2tree@where)=6     144   144     144    103    624     525
+as.factor(GBSG2tree@where)=7     166   166     166     77   1701    1174
+                             0.95UCL
+as.factor(GBSG2tree@where)=3      NA
+as.factor(GBSG2tree@where)=4      NA
+as.factor(GBSG2tree@where)=6     797
+as.factor(GBSG2tree@where)=7    2018
+> names(GBSG2)
+ [1] "horTh"    "age"      "menostat" "tsize"    "tgrade"   "pnodes"  
+ [7] "progrec"  "estrec"   "time"     "cens"    
+> 
+> tr <- ctree(Surv(time, cens) ~ ., data = GBSG2, 
++             control = ctree_control(teststat = "max", 
++                                     testtype = "Univariate"))
+There were 18 warnings (use warnings() to see them)
+> tr
+
+	 Conditional inference tree with 10 terminal nodes
+
+Response:  Surv(time, cens) 
+Inputs:  horTh, age, menostat, tsize, tgrade, pnodes, progrec, estrec 
+Number of observations:  686 
+
+1) pnodes <= 3; criterion = 1, statistic = 7.494
+  2) horTh == {no}; criterion = 0.996, statistic = 2.848
+    3) menostat == {Post}; criterion = 0.978, statistic = 2.286
+      4)*  weights = 112 
+    3) menostat == {Pre}
+      5) age <= 37; criterion = 1, statistic = 3.858
+        6)*  weights = 21 
+      5) age > 37
+        7)*  weights = 115 
+  2) horTh == {yes}
+    8) progrec <= 74; criterion = 0.975, statistic = 2.241
+      9)*  weights = 73 
+    8) progrec > 74
+      10)*  weights = 55 
+1) pnodes > 3
+  11) progrec <= 20; criterion = 1, statistic = 3.865
+    12) pnodes <= 9; criterion = 0.991, statistic = 2.612
+      13)*  weights = 87 
+    12) pnodes > 9
+      14)*  weights = 57 
+  11) progrec > 20
+    15) horTh == {no}; criterion = 0.976, statistic = 2.251
+      16)*  weights = 101 
+    15) horTh == {yes}
+      17) menostat == {Post}; criterion = 0.965, statistic = 2.105
+        18)*  weights = 45 
+      17) menostat == {Pre}
+        19)*  weights = 20 
+> plot(tr)
+> 
+> data("mammoexp", package = "TH.data")
+> attr(mammoexp$ME, "scores") <- 1:3   
+> attr(mammoexp$SYMPT, "scores") <- 1:4
+> attr(mammoexp$DECT, "scores") <- 1:3 
+> names(mammoexp)[names(mammoexp) == "SYMPT"] <- "symptoms"
+> names(mammoexp)[names(mammoexp) == "PB"] <- "benefit"
+> 
+> names(mammoexp)
+[1] "ME"       "symptoms" "benefit"  "HIST"     "BSE"      "DECT"    
+> tr <- ctree(ME ~ ., data = mammoexp)
+> tr
+
+	 Conditional inference tree with 3 terminal nodes
+
+Response:  ME 
+Inputs:  symptoms, benefit, HIST, BSE, DECT 
+Number of observations:  412 
+
+1) symptoms <= Agree; criterion = 1, statistic = 29.933
+  2)*  weights = 113 
+1) symptoms > Agree
+  3) benefit <= 8; criterion = 0.988, statistic = 9.17
+    4)*  weights = 208 
+  3) benefit > 8
+    5)*  weights = 91 
+> plot(tr)
+> 
+> treeresponse(tr, newdata = mammoexp[1:5,])
+[[1]]
+[1] 0.3990385 0.3798077 0.2211538
+
+[[2]]
+[1] 0.84070796 0.05309735 0.10619469
+
+[[3]]
+[1] 0.3990385 0.3798077 0.2211538
+
+[[4]]
+[1] 0.6153846 0.2087912 0.1758242
+
+[[5]]
+[1] 0.3990385 0.3798077 0.2211538
+
+> 
+> ### check different user interfaces
+> data("iris")
+> x <- as.matrix(iris[,colnames(iris) != "Species"])
+> y <- iris[,"Species"]
+> newx <- x
+> 
+> ls <- LearningSample(x, y)
+> p1 <- unlist(treeresponse(ctree(Species ~ ., data = iris), newdata = as.data.frame(newx)))
+> p2 <- unlist(treeresponse(ctreefit(ls, control = ctree_control()), newdata = as.matrix(newx)))
+> stopifnot(identical(max(abs(p1 - p2)), 0))
+> 
+> set.seed(29)
+> p1 <- unlist(treeresponse(cforestfit(ls, control = cforest_unbiased(mtry = 1)), newdata = as.matrix(newx)))
+> set.seed(29)
+> p2 <- unlist(treeresponse(cforest(Species ~ ., data = iris, control = cforest_unbiased(mtry = 1)), 
++              newdata = as.data.frame(newx)))
+> stopifnot(identical(max(abs(p1 - p2)), 0))
+> 
+> proc.time()
+   user  system elapsed 
+  2.492   0.112   2.604 

@@ -1,0 +1,19 @@
+Package: atlantis
+Title: ATLANTIS for creating predictive models from genomic features
+Version: 0.5
+Author: Aviad Tsherniak <aviad@broadinstitute.org> [aut, cre]
+Maintainer: Philip Montgomery <pmontgom@broadinstitute.org>
+Description: ATLANTIS for creating predictive models from genomic features
+Depends:
+    R (>= 3.1.0),
+    atlantisPartyMod (>= 1.0.16.1),
+    reshape2,
+    AUC,
+    RColorBrewer,
+    foreach,
+    caTools
+License: BSD 3-Clause
+LazyData: true
+Suggests:
+    testthat
+RoxygenNote: 5.0.1

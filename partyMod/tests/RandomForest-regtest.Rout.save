@@ -1,0 +1,165 @@
+
+R Under development (unstable) (2014-06-29 r66051) -- "Unsuffered Consequences"
+Copyright (C) 2014 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> set.seed(290875)
+> library("party")
+Loading required package: grid
+Loading required package: zoo
+
+Attaching package: 'zoo'
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric
+
+Loading required package: sandwich
+Loading required package: strucchange
+Loading required package: modeltools
+Loading required package: stats4
+> if (!require("TH.data"))
++     stop("cannot load package TH.data")
+Loading required package: TH.data
+> if (!require("coin"))
++     stop("cannot load package coin")
+Loading required package: coin
+Loading required package: survival
+Loading required package: splines
+> 
+> data("GlaucomaM", package = "TH.data")
+> rf <- cforest(Class ~ ., data = GlaucomaM, control = cforest_unbiased(ntree = 30))
+> stopifnot(mean(GlaucomaM$Class != predict(rf)) < 
++           mean(GlaucomaM$Class != predict(rf, OOB = TRUE)))
+> 
+> data("GBSG2", package = "TH.data")
+> rfS <- cforest(Surv(time, cens) ~ ., data = GBSG2, control = cforest_unbiased(ntree = 30))
+> treeresponse(rfS, newdata = GBSG2[1:2,])
+$`1`
+Call: survfit(formula = y ~ 1, weights = weights)
+
+records   n.max n.start  events  median 0.95LCL 0.95UCL 
+    143     394     394     237    1528    1306    1675 
+
+$`2`
+Call: survfit(formula = y ~ 1, weights = weights)
+
+records   n.max n.start  events  median 0.95LCL 0.95UCL 
+    145     380     380     160    2015    1807    2018 
+
+> 
+> ### give it a try, at least
+> varimp(rf, pre1.0_0 = TRUE)
+           ag            at            as            an            ai 
+ 0.0000000000  0.0004629630  0.0027777778  0.0013888889  0.0032407407 
+          eag           eat           eas           ean           eai 
+ 0.0000000000  0.0000000000  0.0000000000  0.0027777778 -0.0004629630 
+         abrg          abrt          abrs          abrn          abri 
+ 0.0000000000  0.0023148148  0.0013888889  0.0018518519  0.0046296296 
+          hic          mhcg          mhct          mhcs          mhcn 
+ 0.0069444444  0.0000000000  0.0009259259  0.0000000000  0.0009259259 
+         mhci          phcg          phct          phcs          phcn 
+ 0.0078703704  0.0097222222  0.0000000000  0.0000000000 -0.0004629630 
+         phci           hvc          vbsg          vbst          vbss 
+ 0.0171296296  0.0018518519  0.0013888889 -0.0004629630  0.0018518519 
+         vbsn          vbsi          vasg          vast          vass 
+ 0.0000000000  0.0000000000 -0.0023148148  0.0000000000  0.0000000000 
+         vasn          vasi          vbrg          vbrt          vbrs 
+ 0.0000000000  0.0018518519  0.0000000000  0.0013888889 -0.0004629630 
+         vbrn          vbri          varg          vart          vars 
+ 0.0032407407  0.0004629630  0.0351851852  0.0000000000  0.0254629630 
+         varn          vari           mdg           mdt           mds 
+ 0.0138888889  0.0425925926  0.0000000000  0.0000000000 -0.0023148148 
+          mdn           mdi           tmg           tmt           tms 
+ 0.0032407407  0.0004629630  0.0222222222  0.0009259259  0.0069444444 
+          tmn           tmi            mr           rnf          mdic 
+-0.0027777778  0.0273148148  0.0000000000  0.0055555556  0.0074074074 
+          emd            mv 
+ 0.0000000000 -0.0013888889 
+> 
+> P <- proximity(rf)
+> stopifnot(max(abs(P - t(P))) == 0)
+> 
+> P[1:10,1:10]
+            2         43        25        65         70         16         6
+2  1.00000000 0.15384615 0.7500000 0.0000000 0.07142857 0.13333333 0.7142857
+43 0.15384615 1.00000000 0.1818182 0.0000000 0.11111111 0.45454545 0.1111111
+25 0.75000000 0.18181818 1.0000000 0.1818182 0.11111111 0.14285714 0.8000000
+65 0.00000000 0.00000000 0.1818182 1.0000000 0.00000000 0.00000000 0.1666667
+70 0.07142857 0.11111111 0.1111111 0.0000000 1.00000000 0.00000000 0.1428571
+16 0.13333333 0.45454545 0.1428571 0.0000000 0.00000000 1.00000000 0.0000000
+6  0.71428571 0.11111111 0.8000000 0.1666667 0.14285714 0.00000000 1.0000000
+5  0.58823529 0.09090909 0.7692308 0.5000000 0.09090909 0.08333333 0.5000000
+12 0.44444444 0.00000000 0.5714286 0.5833333 0.07692308 0.06666667 0.3333333
+63 0.46153846 0.10000000 0.5000000 0.2222222 0.00000000 0.18181818 0.5000000
+            5         12        63
+2  0.58823529 0.44444444 0.4615385
+43 0.09090909 0.00000000 0.1000000
+25 0.76923077 0.57142857 0.5000000
+65 0.50000000 0.58333333 0.2222222
+70 0.09090909 0.07692308 0.0000000
+16 0.08333333 0.06666667 0.1818182
+6  0.50000000 0.33333333 0.5000000
+5  1.00000000 0.76923077 0.5454545
+12 0.76923077 1.00000000 0.5714286
+63 0.54545455 0.57142857 1.0000000
+> 
+> ### variable importances
+> a <- cforest(Species ~ ., data = iris,
++              control = cforest_unbiased(mtry = 2, ntree = 10))
+> varimp(a, pre1.0_0 = TRUE)
+Sepal.Length  Sepal.Width Petal.Length  Petal.Width 
+ 0.036363636  0.007272727  0.312727273  0.276363636 
+> varimp(a, conditional = TRUE)
+Sepal.Length  Sepal.Width Petal.Length  Petal.Width 
+ 0.003636364 -0.003636364  0.167272727  0.194545455 
+> 
+> airq <- subset(airquality, complete.cases(airquality))
+> a <- cforest(Ozone ~ ., data = airq,
++              control = cforest_unbiased(mtry = 2, ntree = 10))
+> varimp(a, pre1.0_0 = TRUE)   
+   Solar.R       Wind       Temp      Month        Day 
+139.397699 501.974401 500.220403  28.532700   3.806919 
+> varimp(a, conditional = TRUE)
+   Solar.R       Wind       Temp      Month        Day 
+ 93.220640 334.737163 212.686904  14.329278   2.061793 
+> 
+> data("mammoexp", package = "TH.data")
+> a <- cforest(ME ~ ., data = mammoexp, control = cforest_classical(ntree = 10))
+> varimp(a, pre1.0_0 = TRUE)   
+      SYMPT          PB        HIST         BSE        DECT 
+0.027998627 0.021174836 0.018630793 0.002646901 0.005578231 
+> varimp(a, conditional = TRUE)
+      SYMPT          PB        HIST         BSE        DECT 
+0.021408831 0.012420497 0.013407572 0.001282682 0.002857143 
+> 
+> stopifnot(all.equal(unique(sapply(a@weights, sum)), nrow(mammoexp)))
+> 
+> ### check user-defined weights
+> nobs <- nrow(GlaucomaM)
+> i <- rep(0.0, nobs)
+> i[1:floor(.632 * nobs)] <- 1
+> folds <- replicate(100, sample(i))
+> rf2 <- cforest(Class ~ ., data = GlaucomaM, control = cforest_unbiased(ntree = 100), weights = folds)
+> table(predict(rf), predict(rf2))
+          
+           glaucoma normal
+  glaucoma       89      4
+  normal          2    101
+> 
+> proc.time()
+   user  system elapsed 
+  3.132   0.052   3.185 

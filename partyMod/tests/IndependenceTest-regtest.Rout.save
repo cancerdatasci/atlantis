@@ -1,0 +1,352 @@
+
+R Under development (unstable) (2014-06-29 r66051) -- "Unsuffered Consequences"
+Copyright (C) 2014 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> set.seed(290875)
+> library("party")
+Loading required package: grid
+Loading required package: zoo
+
+Attaching package: 'zoo'
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric
+
+Loading required package: sandwich
+Loading required package: strucchange
+Loading required package: modeltools
+Loading required package: stats4
+> 
+> ### get rid of the NAMESPACE
+> attach(asNamespace("party"))
+The following objects are masked from package:party:
+
+    cforest, cforest_classical, cforest_control, cforest_unbiased,
+    conditionalTree, ctree, ctree_control, ctree_memory, edge_simple,
+    mob, mob_control, node_barplot, node_bivplot, node_boxplot,
+    node_density, node_hist, node_inner, node_scatterplot, node_surv,
+    node_terminal, proximity, ptrafo, reweight, sctest.mob, varimp,
+    varimpAUC
+
+> 
+> ### 
+> ###
+> ###    Regression tests for independence tests
+> ###    
+> ###    functions defined in file `./src/IndependenceTest.c'    
+> 
+> ### tests for function C_IndependenceTest
+> xval <- rnorm(60)
+> x <- matrix(rank(xval), ncol = 1)
+> yf <- gl(2, 30)
+> y <- sapply(levels(yf), function(l) as.numeric(yf == l))[,1,drop = FALSE]
+> weights <- rep(1, nrow(x))
+> 
+> varctrl <- new("VariableControl")
+> lec <- new("LinStatExpectCovar", ncol(x), ncol(y))
+> 
+> res <- .Call("R_IndependenceTest", x, y, weights,  
++               lec, varctrl, PACKAGE = "party")
+> print(res)
+[1] 0.3991795 0.6897610
+> wmw <- wilcox.test(xval ~ yf, exact = FALSE, correct = FALSE)
+> print(wmw)
+
+	Wilcoxon rank sum test
+
+data:  xval by yf
+W = 477, p-value = 0.6898
+alternative hypothesis: true location shift is not equal to 0
+
+> stopifnot(isequal(res[2], wmw$p.value))
+> 
+> xval <- rnorm(60)
+> x <- matrix(rank(xval), ncol = 1)
+> yf <- gl(3, 20)
+> y <- sapply(levels(yf), function(l) as.numeric(yf == l))
+> weights <- rep(1, nrow(x))
+> 
+> varctrl <- new("VariableControl")
+> varctrl@teststat <- factor("quad", levels = c("max", "quad"))
+> print(varctrl)
+An object of class "VariableControl"
+Slot "teststat":
+[1] quad
+Levels: max quad
+
+Slot "pvalue":
+[1] TRUE
+
+Slot "tol":
+[1] 1e-10
+
+Slot "maxpts":
+[1] 25000
+
+Slot "abseps":
+[1] 1e-04
+
+Slot "releps":
+[1] 0
+
+> lec <- new("LinStatExpectCovarMPinv", ncol(x), ncol(y))
+> lec@rank <- 0
+> lec@MPinv <- matrix(0, nrow = ncol(x) * ncol(y), ncol = ncol(x) * ncol(y))
+> lec@svdmem <- new("svd_mem", ncol(x) * ncol(y))
+> 
+> res <- .Call("R_IndependenceTest", x, y, weights,  
++               lec, varctrl, PACKAGE = "party")
+> print(res)
+[1] 0.6219672 0.7327259
+> kw <- kruskal.test(xval ~ yf)
+> print(kw)
+
+	Kruskal-Wallis rank sum test
+
+data:  xval by yf
+Kruskal-Wallis chi-squared = 0.622, df = 2, p-value = 0.7327
+
+> stopifnot(isequal(res[2], kw$p.value))
+> stopifnot(isequal(lec@rank, kw$parameter))
+> 
+> tmp <- x
+> x <- y
+> y <- tmp
+> varctrl <- new("VariableControl")
+> varctrl@teststat <- factor("quad", levels = c("max", "quad"))
+> print(varctrl)
+An object of class "VariableControl"
+Slot "teststat":
+[1] quad
+Levels: max quad
+
+Slot "pvalue":
+[1] TRUE
+
+Slot "tol":
+[1] 1e-10
+
+Slot "maxpts":
+[1] 25000
+
+Slot "abseps":
+[1] 1e-04
+
+Slot "releps":
+[1] 0
+
+> lec <- new("LinStatExpectCovarMPinv", ncol(x), ncol(y))
+> lec@rank <- 0
+> lec@MPinv <- matrix(0, nrow = ncol(x) * ncol(y), ncol = ncol(x) * ncol(y))
+> lec@svdmem <- new("svd_mem", ncol(x) * ncol(y))
+> 
+> res <- .Call("R_IndependenceTest", x, y, weights,  
++               lec, varctrl, PACKAGE = "party")
+> print(res)
+[1] 0.6219672 0.7327259
+> kw <- kruskal.test(xval ~ yf)
+> print(kw)
+
+	Kruskal-Wallis rank sum test
+
+data:  xval by yf
+Kruskal-Wallis chi-squared = 0.622, df = 2, p-value = 0.7327
+
+> stopifnot(isequal(res[2], kw$p.value))
+> 
+> xf <- gl(3, 2000)
+> x <- sapply(levels(xf), function(l) as.numeric(xf == l))
+> yf <- gl(3, 2000)[sample(1:6000)]
+> y <- sapply(levels(yf), function(l) as.numeric(yf == l))
+> weights <- rep(1, nrow(x))
+> 
+> varctrl <- new("VariableControl")
+> varctrl@teststat <- factor("quad", levels = c("max", "quad"))
+> print(varctrl)
+An object of class "VariableControl"
+Slot "teststat":
+[1] quad
+Levels: max quad
+
+Slot "pvalue":
+[1] TRUE
+
+Slot "tol":
+[1] 1e-10
+
+Slot "maxpts":
+[1] 25000
+
+Slot "abseps":
+[1] 1e-04
+
+Slot "releps":
+[1] 0
+
+> lec <- new("LinStatExpectCovarMPinv", ncol(x), ncol(y))
+> lec@rank <- 0
+> lec@MPinv <- matrix(0, nrow = ncol(x) * ncol(y), ncol = ncol(x) * ncol(y))
+> lec@svdmem <- new("svd_mem", ncol(x) * ncol(y))
+> 
+> res <- .Call("R_IndependenceTest", x, y, weights,  
++               lec, varctrl, PACKAGE = "party")
+> print(res)
+[1] 1.334778 0.855448
+> chis <- chisq.test(table(xf, yf), correct = FALSE)
+> print(chis)
+
+	Pearson's Chi-squared test
+
+data:  table(xf, yf)
+X-squared = 1.335, df = 4, p-value = 0.8554
+
+> stopifnot(isequal(round(res[2],3), round(chis$p.value,3)))
+> 
+> ### unbalanced data
+> xval <- rnorm(60)
+> x <- matrix(rank(xval), ncol = 1)
+> yf <- factor(rnorm(60) > 1)
+> y <- sapply(levels(yf), function(l) as.numeric(yf == l)) #[,1,drop = FALSE]
+> weights <- rep(1, nrow(x))
+> 
+> varctrl <- new("VariableControl")
+> lec <- new("LinStatExpectCovar", ncol(x), ncol(y))
+> 
+> res <- .Call("R_IndependenceTest", x, y, weights,
++               lec, varctrl, PACKAGE = "party")
+> print(res)
+[1] 1.5378968 0.1240738
+> wmw <- wilcox.test(xval ~ yf, exact = FALSE, correct = FALSE)
+> print(wmw)
+
+	Wilcoxon rank sum test
+
+data:  xval by yf
+W = 80, p-value = 0.1241
+alternative hypothesis: true location shift is not equal to 0
+
+> stopifnot(isequal(res[2], wmw$p.value))
+> 
+> varctrl <- new("VariableControl")
+> lec <- new("LinStatExpectCovar", ncol(y), ncol(x))
+> 
+> res <- .Call("R_IndependenceTest", y, x, weights,
++               lec, varctrl, PACKAGE = "party")
+> print(res)
+[1] 1.5378968 0.1240738
+> wmw <- wilcox.test(xval ~ yf, exact = FALSE, correct = FALSE)
+> print(wmw)
+
+	Wilcoxon rank sum test
+
+data:  xval by yf
+W = 80, p-value = 0.1241
+alternative hypothesis: true location shift is not equal to 0
+
+> stopifnot(isequal(res[2], wmw$p.value))
+> 
+> xf <- factor(cut(rnorm(6000), breaks = c(-Inf, -2, 0.5, Inf)))
+> x <- sapply(levels(xf), function(l) as.numeric(xf == l))
+> yf <- factor(cut(rnorm(6000), breaks = c(-Inf, -0.5, 1.5, Inf)))
+> y <- sapply(levels(yf), function(l) as.numeric(yf == l))
+> weights <- rep(1, nrow(x))
+> 
+> varctrl <- new("VariableControl")
+> varctrl@teststat <- factor("quad", levels = c("max", "quad"))
+> print(varctrl)
+An object of class "VariableControl"
+Slot "teststat":
+[1] quad
+Levels: max quad
+
+Slot "pvalue":
+[1] TRUE
+
+Slot "tol":
+[1] 1e-10
+
+Slot "maxpts":
+[1] 25000
+
+Slot "abseps":
+[1] 1e-04
+
+Slot "releps":
+[1] 0
+
+> lec <- new("LinStatExpectCovarMPinv", ncol(x), ncol(y))
+> lec@rank <- 0
+> lec@MPinv <- matrix(0, nrow = ncol(x) * ncol(y), ncol = ncol(x) * ncol(y))
+> lec@svdmem <- new("svd_mem", ncol(x) * ncol(y))
+> 
+> res <- .Call("R_IndependenceTest", x, y, weights,  
++               lec, varctrl, PACKAGE = "party")
+> print(res)
+[1] 2.1737015 0.7038467
+> chis <- chisq.test(table(xf, yf), correct = FALSE)
+> print(chis)
+
+	Pearson's Chi-squared test
+
+data:  table(xf, yf)
+X-squared = 2.1741, df = 4, p-value = 0.7038
+
+> stopifnot(isequal(round(res[2],3), round(chis$p.value,3)))
+> 
+> 
+> ### Multiple Variables
+> gtctrl <- new("GlobalTestControl")
+> tlev <- levels(gtctrl@testtype)   
+> gtctrl@testtype <- factor("Univariate", levels = tlev)
+> 
+> mydata = data.frame(y = gl(2, 50), x1 = rnorm(100),
++                     x2 = rnorm(100), x3 = rnorm(100))
+> inp <- initVariableFrame(mydata[,c("x1", "x2", "x3"),drop = FALSE], 
++     trafo = function(data) ptrafo(data, numeric_trafo = rank))
+> resp <- initVariableFrame(mydata[,"y",drop = FALSE], trafo = NULL, response = TRUE)
+> ls <- new("LearningSample", inputs = inp, responses = resp,
++           weights = rep(1, inp@nobs), nobs = nrow(mydata), 
++           ninputs = inp@ninputs)
+> tm <- ctree_memory(ls)
+> varctrl <- new("VariableControl")
+> pvals <- .Call("R_GlobalTest", ls, ls@weights, tm, varctrl, gtctrl, PACKAGE = "party")[[2]]
+> wpvals <- rep(0, 3)
+> wpvals[1] <- wilcox.test(x1 ~ y, data = mydata,
++                          correct = FALSE, exact = FALSE)$p.value
+> wpvals[2] <- wilcox.test(x2 ~ y, data = mydata, 
++                          correct = FALSE, exact = FALSE)$p.value
+> wpvals[3] <- wilcox.test(x3 ~ y, data = mydata, 
++                          correct = FALSE, exact = FALSE)$p.value
+> stopifnot(isequal(wpvals, 1 - pvals))
+> 
+> varctrl <- new("VariableControl")
+> gtctrl@testtype <- factor("MonteCarlo", levels = tlev)
+> gtctrl@nresample <- as.integer(19999)
+> inp <- initVariableFrame(mydata[,"x1",drop = FALSE], trafo = function(data)
++     ptrafo(data, numeric_trafo = rank))
+> resp <- initVariableFrame(mydata[,"y",drop = FALSE], trafo = NULL, response = TRUE)
+> ls <- new("LearningSample", inputs = inp, responses = resp,
++           weights = rep(1, inp@nobs), nobs = nrow(mydata), 
++           ninputs = as.integer(1))
+> pvals <- .Call("R_GlobalTest", ls, ls@weights, tm, varctrl, gtctrl, PACKAGE = "party")[[2]]
+> stopifnot(abs((1 - pvals) - wilcox.test(x1 ~ y, data = mydata, 
++     exact = TRUE)$p.value) < 1e-2)
+> 
+> proc.time()
+   user  system elapsed 
+  0.964   0.048   1.012 

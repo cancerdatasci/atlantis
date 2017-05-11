@@ -1,0 +1,562 @@
+
+> options(width = 70, SweaveHooks = list(leftpar = function() par(mai = par("mai") * 
++     c(1, 1.1, 1, 1))))
+
+> require("party")
+Loading required package: party
+Loading required package: grid
+Loading required package: zoo
+
+Attaching package: ‘zoo’
+
+The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+Loading required package: sandwich
+Loading required package: strucchange
+Loading required package: modeltools
+Loading required package: stats4
+
+> require("coin")
+Loading required package: coin
+Loading required package: survival
+Loading required package: splines
+
+> set.seed(290875)
+
+> ls <- data.frame(y = gl(3, 50, labels = c("A", "B", 
++     "C")), x1 = rnorm(150) + rep(c(1, 0, 0), c(50, 50, 50)), 
++     x2 = runif(150))
+
+> library("party")
+
+> ctree(y ~ x1 + x2, data = ls)
+
+	 Conditional inference tree with 2 terminal nodes
+
+Response:  y 
+Inputs:  x1, x2 
+Number of observations:  150 
+
+1) x1 <= 0.8255248; criterion = 1, statistic = 22.991
+  2)*  weights = 96 
+1) x1 > 0.8255248
+  3)*  weights = 54 
+
+> ctree(y ~ x1 + x2, data = ls, xtrafo = function(data) trafo(data, 
++     numeric_trafo = rank))
+
+	 Conditional inference tree with 2 terminal nodes
+
+Response:  y 
+Inputs:  x1, x2 
+Number of observations:  150 
+
+1) x1 <= 0.8255248; criterion = 1, statistic = 22.186
+  2)*  weights = 96 
+1) x1 > 0.8255248
+  3)*  weights = 54 
+
+> ctree_control(testtype = "Bonferroni")
+An object of class "TreeControl"
+Slot "varctrl":
+An object of class "VariableControl"
+Slot "teststat":
+[1] quad
+Levels: max quad
+
+Slot "pvalue":
+[1] TRUE
+
+Slot "tol":
+[1] 1e-10
+
+Slot "maxpts":
+[1] 25000
+
+Slot "abseps":
+[1] 1e-04
+
+Slot "releps":
+[1] 0
+
+
+Slot "splitctrl":
+An object of class "SplitControl"
+Slot "minprob":
+[1] 0.01
+
+Slot "minsplit":
+[1] 20
+
+Slot "minbucket":
+[1] 7
+
+Slot "tol":
+[1] 1e-10
+
+Slot "maxsurrogate":
+[1] 0
+
+
+Slot "gtctrl":
+An object of class "GlobalTestControl"
+Slot "testtype":
+[1] Bonferroni
+5 Levels: Bonferroni MonteCarlo Aggregated ... Teststatistic
+
+Slot "nresample":
+[1] 9999
+
+Slot "randomsplits":
+[1] FALSE
+
+Slot "mtry":
+[1] 0
+
+Slot "mincriterion":
+[1] 0.95
+
+
+Slot "tgctrl":
+An object of class "TreeGrowControl"
+Slot "stump":
+[1] FALSE
+
+Slot "maxdepth":
+[1] 0
+
+Slot "savesplitstats":
+[1] TRUE
+
+
+
+> ctree_control(testtype = "MonteCarlo")
+An object of class "TreeControl"
+Slot "varctrl":
+An object of class "VariableControl"
+Slot "teststat":
+[1] quad
+Levels: max quad
+
+Slot "pvalue":
+[1] TRUE
+
+Slot "tol":
+[1] 1e-10
+
+Slot "maxpts":
+[1] 25000
+
+Slot "abseps":
+[1] 1e-04
+
+Slot "releps":
+[1] 0
+
+
+Slot "splitctrl":
+An object of class "SplitControl"
+Slot "minprob":
+[1] 0.01
+
+Slot "minsplit":
+[1] 20
+
+Slot "minbucket":
+[1] 7
+
+Slot "tol":
+[1] 1e-10
+
+Slot "maxsurrogate":
+[1] 0
+
+
+Slot "gtctrl":
+An object of class "GlobalTestControl"
+Slot "testtype":
+[1] MonteCarlo
+5 Levels: Bonferroni MonteCarlo Aggregated ... Teststatistic
+
+Slot "nresample":
+[1] 9999
+
+Slot "randomsplits":
+[1] FALSE
+
+Slot "mtry":
+[1] 0
+
+Slot "mincriterion":
+[1] 0.95
+
+
+Slot "tgctrl":
+An object of class "TreeGrowControl"
+Slot "stump":
+[1] FALSE
+
+Slot "maxdepth":
+[1] 0
+
+Slot "savesplitstats":
+[1] TRUE
+
+
+
+> ctree_control(savesplitstats = TRUE)
+An object of class "TreeControl"
+Slot "varctrl":
+An object of class "VariableControl"
+Slot "teststat":
+[1] quad
+Levels: max quad
+
+Slot "pvalue":
+[1] TRUE
+
+Slot "tol":
+[1] 1e-10
+
+Slot "maxpts":
+[1] 25000
+
+Slot "abseps":
+[1] 1e-04
+
+Slot "releps":
+[1] 0
+
+
+Slot "splitctrl":
+An object of class "SplitControl"
+Slot "minprob":
+[1] 0.01
+
+Slot "minsplit":
+[1] 20
+
+Slot "minbucket":
+[1] 7
+
+Slot "tol":
+[1] 1e-10
+
+Slot "maxsurrogate":
+[1] 0
+
+
+Slot "gtctrl":
+An object of class "GlobalTestControl"
+Slot "testtype":
+[1] Bonferroni
+5 Levels: Bonferroni MonteCarlo Aggregated ... Teststatistic
+
+Slot "nresample":
+[1] 9999
+
+Slot "randomsplits":
+[1] FALSE
+
+Slot "mtry":
+[1] 0
+
+Slot "mincriterion":
+[1] 0.95
+
+
+Slot "tgctrl":
+An object of class "TreeGrowControl"
+Slot "stump":
+[1] FALSE
+
+Slot "maxdepth":
+[1] 0
+
+Slot "savesplitstats":
+[1] TRUE
+
+
+
+> ctree_control(minsplit = 20)
+An object of class "TreeControl"
+Slot "varctrl":
+An object of class "VariableControl"
+Slot "teststat":
+[1] quad
+Levels: max quad
+
+Slot "pvalue":
+[1] TRUE
+
+Slot "tol":
+[1] 1e-10
+
+Slot "maxpts":
+[1] 25000
+
+Slot "abseps":
+[1] 1e-04
+
+Slot "releps":
+[1] 0
+
+
+Slot "splitctrl":
+An object of class "SplitControl"
+Slot "minprob":
+[1] 0.01
+
+Slot "minsplit":
+[1] 20
+
+Slot "minbucket":
+[1] 7
+
+Slot "tol":
+[1] 1e-10
+
+Slot "maxsurrogate":
+[1] 0
+
+
+Slot "gtctrl":
+An object of class "GlobalTestControl"
+Slot "testtype":
+[1] Bonferroni
+5 Levels: Bonferroni MonteCarlo Aggregated ... Teststatistic
+
+Slot "nresample":
+[1] 9999
+
+Slot "randomsplits":
+[1] FALSE
+
+Slot "mtry":
+[1] 0
+
+Slot "mincriterion":
+[1] 0.95
+
+
+Slot "tgctrl":
+An object of class "TreeGrowControl"
+Slot "stump":
+[1] FALSE
+
+Slot "maxdepth":
+[1] 0
+
+Slot "savesplitstats":
+[1] TRUE
+
+
+
+> ctree_control(maxsurrogate = 3)
+An object of class "TreeControl"
+Slot "varctrl":
+An object of class "VariableControl"
+Slot "teststat":
+[1] quad
+Levels: max quad
+
+Slot "pvalue":
+[1] TRUE
+
+Slot "tol":
+[1] 1e-10
+
+Slot "maxpts":
+[1] 25000
+
+Slot "abseps":
+[1] 1e-04
+
+Slot "releps":
+[1] 0
+
+
+Slot "splitctrl":
+An object of class "SplitControl"
+Slot "minprob":
+[1] 0.01
+
+Slot "minsplit":
+[1] 20
+
+Slot "minbucket":
+[1] 7
+
+Slot "tol":
+[1] 1e-10
+
+Slot "maxsurrogate":
+[1] 3
+
+
+Slot "gtctrl":
+An object of class "GlobalTestControl"
+Slot "testtype":
+[1] Bonferroni
+5 Levels: Bonferroni MonteCarlo Aggregated ... Teststatistic
+
+Slot "nresample":
+[1] 9999
+
+Slot "randomsplits":
+[1] FALSE
+
+Slot "mtry":
+[1] 0
+
+Slot "mincriterion":
+[1] 0.95
+
+
+Slot "tgctrl":
+An object of class "TreeGrowControl"
+Slot "stump":
+[1] FALSE
+
+Slot "maxdepth":
+[1] 0
+
+Slot "savesplitstats":
+[1] TRUE
+
+
+
+> ct <- ctree(y ~ x1 + x2, data = ls)
+
+> ct
+
+	 Conditional inference tree with 2 terminal nodes
+
+Response:  y 
+Inputs:  x1, x2 
+Number of observations:  150 
+
+1) x1 <= 0.8255248; criterion = 1, statistic = 22.991
+  2)*  weights = 96 
+1) x1 > 0.8255248
+  3)*  weights = 54 
+
+> plot(ct)
+
+> nodes(ct, 1)
+[[1]]
+1) x1 <= 0.8255248; criterion = 1, statistic = 22.991
+  2)*  weights = 96 
+1) x1 > 0.8255248
+  3)*  weights = 54 
+
+
+> names(nodes(ct, 1)[[1]])
+ [1] "nodeID"     "weights"    "criterion"  "terminal"   "psplit"    
+ [6] "ssplits"    "prediction" "left"       "right"      NA          
+
+> Predict(ct, newdata = ls)
+  [1] A A A A C A C A C C A A C A A A A C A C A A A C A A A C C A A C
+ [33] A A C A A C C C A A C C C C A A A A A A C C C C A C C A C C C C
+ [65] C C A A A A A C C A C A C C C C C C C C C C C C A C A C A C C C
+ [97] C C C C C A C C C A C C A C C C C C C C A C C C C C C C C C C C
+[129] C C C C C C C C C A C C C C A C C A C A C A
+Levels: A B C
+
+> treeresponse(ct, newdata = ls[c(1, 51, 101), ])
+[[1]]
+[1] 0.5740741 0.2592593 0.1666667
+
+[[2]]
+[1] 0.5740741 0.2592593 0.1666667
+
+[[3]]
+[1] 0.1979167 0.3750000 0.4270833
+
+
+> where(ct, newdata = ls[c(1, 51, 101), ])
+[1] 3 3 2
+
+> data("treepipit", package = "coin")
+
+> tptree <- ctree(counts ~ ., data = treepipit)
+
+> plot(tptree, terminal_panel = node_hist(tptree, breaks = 0:6 - 
++     0.5, ymax = 65, horizontal = FALSE, freq = TRUE))
+
+> x <- tptree@tree
+
+> data("GlaucomaM", package = "TH.data")
+
+> gtree <- ctree(Class ~ ., data = GlaucomaM)
+
+> x <- gtree@tree
+
+> plot(gtree)
+
+> plot(gtree, inner_panel = node_barplot, edge_panel = function(...) invisible(), 
++     tnex = 1)
+
+> cex <- 1.6
+
+> inner <- nodes(gtree, c(1, 2, 5))
+
+> layout(matrix(1:length(inner), ncol = length(inner)))
+
+> out <- sapply(inner, function(i) {
++     splitstat <- i$psplit$splitstatistic
++     x <- GlaucomaM[[i$psplit$variableName]][splitstat > 0]
++     plo .... [TRUNCATED] 
+
+> table(Predict(gtree), GlaucomaM$Class)
+          
+           glaucoma normal
+  glaucoma       74      5
+  normal         24     93
+
+> prob <- sapply(treeresponse(gtree), function(x) x[1]) + 
++     runif(nrow(GlaucomaM), min = -0.01, max = 0.01)
+
+> splitvar <- nodes(gtree, 1)[[1]]$psplit$variableName
+
+> plot(GlaucomaM[[splitvar]], prob, pch = as.numeric(GlaucomaM$Class), 
++     ylab = "Conditional Class Prob.", xlab = splitvar)
+
+> abline(v = nodes(gtree, 1)[[1]]$psplit$splitpoint, 
++     lty = 2)
+
+> legend(0.15, 0.7, pch = 1:2, legend = levels(GlaucomaM$Class), 
++     bty = "n")
+
+> data("GBSG2", package = "TH.data")
+
+> stree <- ctree(Surv(time, cens) ~ ., data = GBSG2)
+
+> plot(stree)
+
+> treeresponse(stree, newdata = GBSG2[1:2, ])
+[[1]]
+Call: survfit(formula = y ~ 1, weights = weights)
+
+records   n.max n.start  events  median 0.95LCL 0.95UCL 
+    248     248     248      88    2093    1814      NA 
+
+[[2]]
+Call: survfit(formula = y ~ 1, weights = weights)
+
+records   n.max n.start  events  median 0.95LCL 0.95UCL 
+    166     166     166      77    1701    1174    2018 
+
+
+> data("mammoexp", package = "TH.data")
+
+> mtree <- ctree(ME ~ ., data = mammoexp)
+
+> plot(mtree)
+
+ *** Run successfully completed ***
+> proc.time()
+   user  system elapsed 
+  1.404   0.056   1.457 

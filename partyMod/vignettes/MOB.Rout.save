@@ -1,0 +1,265 @@
+
+> require("party")
+Loading required package: party
+Loading required package: grid
+Loading required package: zoo
+
+Attaching package: ‘zoo’
+
+The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+Loading required package: sandwich
+Loading required package: strucchange
+Loading required package: modeltools
+Loading required package: stats4
+
+> options(useFancyQuotes = FALSE)
+
+> library("party")
+
+> data("BostonHousing", package = "mlbench")
+
+> BostonHousing$lstat <- log(BostonHousing$lstat)
+
+> BostonHousing$rm <- BostonHousing$rm^2
+
+> BostonHousing$chas <- factor(BostonHousing$chas, levels = 0:1, 
++     labels = c("no", "yes"))
+
+> BostonHousing$rad <- factor(BostonHousing$rad, ordered = TRUE)
+
+> ctrl <- mob_control(alpha = 0.05, bonferroni = TRUE, 
++     minsplit = 40, objfun = deviance, verbose = TRUE)
+
+> fmBH <- mob(medv ~ lstat + rm | zn + indus + chas + 
++     nox + age + dis + rad + tax + crim + b + ptratio, data = BostonHousing, 
++     control =  .... [TRUNCATED] 
+
+-------------------------------------------
+Fluctuation tests of splitting variables:
+                    zn        indus         chas          nox          age
+statistic 3.363356e+01 6.532322e+01 2.275635e+01 8.136281e+01 3.675850e+01
+p.value   1.023987e-04 1.363602e-11 4.993053e-04 3.489797e-15 2.263798e-05
+                   dis          rad          tax         crim            b
+statistic 6.848533e+01 1.153641e+02 9.068440e+01 8.655065e+01 3.627629e+01
+p.value   2.693904e-12 7.087680e-13 2.735524e-17 2.356348e-16 2.860686e-05
+               ptratio
+statistic 7.221524e+01
+p.value   3.953623e-13
+
+Best splitting variable: tax
+Perform split? yes
+-------------------------------------------
+
+Node properties:
+tax <= 432; criterion = 1, statistic = 115.364
+
+-------------------------------------------
+Fluctuation tests of splitting variables:
+                    zn      indus      chas          nox        age
+statistic 27.785009791 21.3329346 8.0272421 23.774323202 11.9204284
+p.value    0.001494064  0.0285193 0.4005192  0.009518732  0.7666366
+                   dis          rad          tax         crim         b
+statistic 24.268011081 50.481593270 3.523250e+01 3.276813e+01 9.0363245
+p.value    0.007601532  0.003437763 4.275527e-05 1.404487e-04 0.9871502
+               ptratio
+statistic 4.510680e+01
+p.value   3.309747e-07
+
+Best splitting variable: ptratio
+Perform split? yes
+-------------------------------------------
+
+Node properties:
+ptratio <= 15.2; criterion = 1, statistic = 50.482
+
+-------------------------------------------
+Fluctuation tests of splitting variables:
+                    zn       indus        chas         nox         age
+statistic 3.233350e+01 22.26864036 12.93407112 22.10510234 20.41295354
+p.value   1.229678e-04  0.01504788  0.05259509  0.01622098  0.03499731
+                 dis          rad          tax        crim         b
+statistic 17.7204735 5.526565e+01 2.879128e+01 20.28503194 6.5549665
+p.value    0.1091769 7.112214e-04 6.916307e-04  0.03706934 0.9999522
+               ptratio
+statistic 4.789850e+01
+p.value   4.738855e-08
+
+Best splitting variable: ptratio
+Perform split? yes
+-------------------------------------------
+
+Node properties:
+ptratio <= 19.6; criterion = 1, statistic = 55.266
+
+-------------------------------------------
+Fluctuation tests of splitting variables:
+                 zn      indus      chas        nox       age        dis
+statistic 14.971474 14.6477733 7.1172962 14.3455158 8.2176363 16.1112185
+p.value    0.280361  0.3134649 0.5405005  0.3467974 0.9906672  0.1847818
+                  rad          tax     crim         b    ptratio
+statistic 43.17824350 3.447271e+01 9.340075 8.7773142 10.8469969
+p.value    0.03281124 4.281939e-05 0.952996 0.9772696  0.8202694
+
+Best splitting variable: tax
+Perform split? yes
+-------------------------------------------
+
+Node properties:
+tax <= 265; criterion = 1, statistic = 43.178
+
+-------------------------------------------
+Fluctuation tests of splitting variables:
+                 zn     indus     chas       nox        age       dis
+statistic 11.998039 7.3971233 7.227770 9.2936189 14.3023962 8.9239826
+p.value    0.574642 0.9931875 0.522447 0.9119621  0.2886603 0.9389895
+                 rad        tax       crim         b    ptratio
+statistic 33.1746444 16.6666129 11.7143758 9.9050903 11.5927528
+p.value    0.3926249  0.1206412  0.6153455 0.8539893  0.6328381
+
+Best splitting variable: tax
+Perform split? no
+-------------------------------------------
+
+-------------------------------------------
+Fluctuation tests of splitting variables:
+                  zn     indus         chas         nox       age        dis
+statistic 10.9187926 9.0917078 2.754081e+01 17.39203006 4.6282349 11.9581600
+p.value    0.7091039 0.9172303 4.987667e-05  0.08922543 0.9999992  0.5607267
+                rad        tax     crim        b   ptratio
+statistic 0.2557803 10.9076165 3.711175 3.158329 9.8865054
+p.value   1.0000000  0.7106612 1.000000 1.000000 0.8410064
+
+Best splitting variable: chas
+Perform split? yes
+-------------------------------------------
+
+Splitting factor variable, objective function: 
+ no 
+Inf 
+
+No admissable split found in 'chas'
+
+> fmBH
+1) tax <= 432; criterion = 1, statistic = 115.364
+  2) ptratio <= 15.2; criterion = 1, statistic = 50.482
+    3)*  weights = 72 
+Terminal node model
+Linear model with coefficients:
+(Intercept)        lstat           rm  
+     9.2349      -4.9391       0.6859  
+
+  2) ptratio > 15.2
+    4) ptratio <= 19.6; criterion = 1, statistic = 55.266
+      5) tax <= 265; criterion = 1, statistic = 43.178
+        6)*  weights = 63 
+Terminal node model
+Linear model with coefficients:
+(Intercept)        lstat           rm  
+     3.9637      -2.7663       0.6881  
+
+      5) tax > 265
+        7)*  weights = 162 
+Terminal node model
+Linear model with coefficients:
+(Intercept)        lstat           rm  
+    -1.7984      -0.2677       0.6539  
+
+    4) ptratio > 19.6
+      8)*  weights = 56 
+Terminal node model
+Linear model with coefficients:
+(Intercept)        lstat           rm  
+    17.5865      -4.6190       0.3387  
+
+1) tax > 432
+  9)*  weights = 153 
+Terminal node model
+Linear model with coefficients:
+(Intercept)        lstat           rm  
+    68.2971     -16.3540      -0.1478  
+
+
+> plot(fmBH)
+
+> coef(fmBH)
+  (Intercept)      lstat         rm
+3    9.234880  -4.939096  0.6859136
+6    3.963720  -2.766287  0.6881287
+7   -1.798387  -0.267707  0.6538864
+8   17.586490  -4.618975  0.3386744
+9   68.297087 -16.354006 -0.1477939
+
+> summary(fmBH, node = 7)
+
+Call:
+NULL
+
+Weighted Residuals:
+   Min     1Q Median     3Q    Max 
+-9.092  0.000  0.000  0.000 10.236 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -1.79839    2.84702  -0.632    0.529    
+lstat       -0.26771    0.69581  -0.385    0.701    
+rm           0.65389    0.03757  17.404   <2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 2.652 on 159 degrees of freedom
+Multiple R-squared:  0.8173,	Adjusted R-squared:  0.815 
+F-statistic: 355.6 on 2 and 159 DF,  p-value: < 2.2e-16
+
+
+> sctest(fmBH, node = 7)
+                 zn     indus     chas       nox        age       dis
+statistic 11.998039 7.3971233 7.227770 9.2936189 14.3023962 8.9239826
+p.value    0.574642 0.9931875 0.522447 0.9119621  0.2886603 0.9389895
+                 rad        tax       crim         b    ptratio
+statistic 33.1746444 16.6666129 11.7143758 9.9050903 11.5927528
+p.value    0.3926249  0.1206412  0.6153455 0.8539893  0.6328381
+
+> mean(residuals(fmBH)^2)
+[1] 12.03518
+
+> logLik(fmBH)
+'log Lik.' -1310.506 (df=24)
+
+> AIC(fmBH)
+[1] 2669.013
+
+> nt <- NROW(coef(fmBH))
+
+> nk <- NCOL(coef(fmBH))
+
+> data("PimaIndiansDiabetes2", package = "mlbench")
+
+> PimaIndiansDiabetes <- na.omit(PimaIndiansDiabetes2[, 
++     -c(4, 5)])
+
+> fmPID <- mob(diabetes ~ glucose | pregnant + pressure + 
++     mass + pedigree + age, data = PimaIndiansDiabetes, model = glinearModel, 
++     famil .... [TRUNCATED] 
+
+> plot(fmPID)
+Loading required package: vcd
+
+> coef(fmPID)
+  (Intercept)    glucose
+2  -10.999447 0.06456780
+4   -6.573067 0.04504490
+5   -3.318569 0.02748038
+
+> exp(coef(fmPID)[, 2])
+       2        4        5 
+1.066698 1.046075 1.027861 
+
+> risk <- round(100 * (exp(coef(fmPID)[, 2]) - 1), digits = 1)
+
+ *** Run successfully completed ***
+> proc.time()
+   user  system elapsed 
+  3.548   0.080   3.636 

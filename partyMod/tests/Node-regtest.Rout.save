@@ -1,0 +1,78 @@
+
+R Under development (unstable) (2014-06-29 r66051) -- "Unsuffered Consequences"
+Copyright (C) 2014 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> set.seed(290875)
+> library("party")
+Loading required package: grid
+Loading required package: zoo
+
+Attaching package: 'zoo'
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric
+
+Loading required package: sandwich
+Loading required package: strucchange
+Loading required package: modeltools
+Loading required package: stats4
+> if (!require("TH.data"))
++     stop("cannot load package TH.data")
+Loading required package: TH.data
+> 
+> ### get rid of the NAMESPACE
+> attach(asNamespace("party"))
+The following objects are masked from package:party:
+
+    cforest, cforest_classical, cforest_control, cforest_unbiased,
+    conditionalTree, ctree, ctree_control, ctree_memory, edge_simple,
+    mob, mob_control, node_barplot, node_bivplot, node_boxplot,
+    node_density, node_hist, node_inner, node_scatterplot, node_surv,
+    node_terminal, proximity, ptrafo, reweight, sctest.mob, varimp,
+    varimpAUC
+
+> 
+> gtctrl <- new("GlobalTestControl")
+> tlev <- levels(gtctrl@testtype)
+> 
+> data(GlaucomaM, package = "TH.data")
+> inp <- initVariableFrame(GlaucomaM[,-63,drop = FALSE], trafo = NULL) #, fun = rank)
+> resp <- initVariableFrame(GlaucomaM[,"Class",drop = FALSE], trafo = NULL, response = TRUE)
+> ls <- new("LearningSample", inputs = inp, responses = resp,
++           weights = rep(1, inp@nobs), nobs = nrow(GlaucomaM), 
++           ninputs = inp@ninputs)
+> tm <- ctree_memory(ls, TRUE)
+> ctrl <- ctree_control()
+> node <- .Call("R_Node", ls, ls@weights, tm, ctrl, PACKAGE = "party")
+> stopifnot(isequal(node[[5]][[3]], 0.059))
+> 
+> ### and now with ranked inputs -> Wilcoxon-Mann-Whitney tests
+> inp <- initVariableFrame(GlaucomaM[,-63,drop = FALSE], trafo = function(data)
++ ptrafo(data, numeric_trafo = rank))
+> resp <- initVariableFrame(GlaucomaM[,"Class",drop = FALSE], trafo = NULL, response = TRUE)
+> ls <- new("LearningSample", inputs = inp, responses = resp,
++           weights = rep(1, inp@nobs), nobs = nrow(GlaucomaM), 
++           ninputs = inp@ninputs)
+> tm <- ctree_memory(ls, TRUE)
+> ctrl <- ctree_control()
+> node <- .Call("R_Node", ls, ls@weights, tm, ctrl, PACKAGE = "party")
+> stopifnot(isequal(node[[5]][[3]], 0.059))
+> 
+> proc.time()
+   user  system elapsed 
+  0.804   0.028   0.828 

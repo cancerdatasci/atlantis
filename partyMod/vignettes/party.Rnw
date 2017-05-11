@@ -1,0 +1,978 @@
+\documentclass[nojss]{jss}
+
+%\VignetteIndexEntry{party: A Laboratory for Recursive Partytioning}
+%\VignetteDepends{coin, TH.data}
+%\VignetteKeywords{conditional inference, non-parametric models, recursive partitioning}
+%\VignettePackage{party}
+
+%% packages
+\usepackage{amstext}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{thumbpdf}
+\usepackage{rotating}
+%% need no \usepackage{Sweave}
+
+%% commands
+\renewcommand{\Prob}{\mathbb{P} }
+\renewcommand{\E}{\mathbb{E}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\Var}{\mathbb{V}}
+\newcommand{\R}{\mathbb{R} }
+\newcommand{\N}{\mathbb{N} }
+\newcommand{\C}{\mathbb{C} }
+\newcommand{\argmin}{\operatorname{argmin}\displaylimits}
+\newcommand{\argmax}{\operatorname{argmax}\displaylimits}
+\newcommand{\LS}{\mathcal{L}_n}
+\newcommand{\TS}{\mathcal{T}_n}
+\newcommand{\LSc}{\mathcal{L}_{\text{comb},n}}
+\newcommand{\LSbc}{\mathcal{L}^*_{\text{comb},n}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\yn}{y_{\text{new}}}
+\newcommand{\z}{\mathbf{z}}
+\newcommand{\X}{\mathbf{X}}
+\newcommand{\Y}{\mathbf{Y}}
+\newcommand{\sX}{\mathcal{X}}
+\newcommand{\sY}{\mathcal{Y}}
+\newcommand{\T}{\mathbf{T}}
+\newcommand{\x}{\mathbf{x}}
+\renewcommand{\a}{\mathbf{a}}
+\newcommand{\xn}{\mathbf{x}_{\text{new}}}
+\newcommand{\y}{\mathbf{y}}
+\newcommand{\w}{\mathbf{w}}
+\newcommand{\ws}{\mathbf{w}_\cdot}
+\renewcommand{\t}{\mathbf{t}}
+\newcommand{\M}{\mathbf{M}}
+\renewcommand{\vec}{\text{vec}}
+\newcommand{\B}{\mathbf{B}}
+\newcommand{\K}{\mathbf{K}}
+\newcommand{\W}{\mathbf{W}}
+\newcommand{\D}{\mathbf{D}}
+\newcommand{\I}{\mathbf{I}}
+\newcommand{\bS}{\mathbf{S}}
+\newcommand{\cellx}{\pi_n[\x]}
+\newcommand{\partn}{\pi_n(\mathcal{L}_n)}
+\newcommand{\err}{\text{Err}}
+\newcommand{\ea}{\widehat{\text{Err}}^{(a)}}
+\newcommand{\ecv}{\widehat{\text{Err}}^{(cv1)}}
+\newcommand{\ecvten}{\widehat{\text{Err}}^{(cv10)}}
+\newcommand{\eone}{\widehat{\text{Err}}^{(1)}}
+\newcommand{\eplus}{\widehat{\text{Err}}^{(.632+)}}
+\newcommand{\eoob}{\widehat{\text{Err}}^{(oob)}}
+\newcommand{\bft}{\mathbf{t}}
+
+\hyphenation{Qua-dra-tic}
+
+\title{\pkg{party}: A Laboratory for Recursive Partytioning}
+\Plaintitle{party: A Laboratory for Recursive Partytioning}
+
+\author{Torsten Hothorn\\Ludwig-Maximilians-\\Universit\"at M\"unchen
+   \And Kurt Hornik\\Wirtschaftsuniversit\"at Wien
+   \And Achim Zeileis\\Wirtschaftsuniversit\"at Wien}
+\Plainauthor{Achim Zeileis, Torsten Hothorn, Kurt Hornik}
+
+\Abstract{
+  The \pkg{party} package \citep{Hothorn+Hornik+Zeileis:2006a} aims
+  at providing a recursive part(y)itioning laboratory assembling
+  various high- and low-level tools for building tree-based regression
+  and classification models. This includes conditional inference trees
+  (\code{ctree}), conditional inference forests (\code{cforest}) and
+  parametric model trees (\code{mob}). At the core of the package is
+  \code{ctree}, an implementation of conditional inference trees which
+  embed tree-structured regression models into a well defined theory of
+  conditional inference procedures. This non-parametric class of regression
+  trees is applicable to all kinds of regression problems, including
+  nominal, ordinal, numeric, censored as well as multivariate response
+  variables and arbitrary measurement scales of the covariates.
+  This vignette comprises a practical guide to exploiting the flexible
+  and extensible computational tools in \pkg{party} for fitting and
+  visualizing conditional inference trees.
+}
+\Keywords{conditional inference, non-parametric models, recursive partitioning}
+
+\Address{
+  Torsten Hothorn\\
+  Institut f\"ur Statistik\\
+  Ludwig-Maximilians-Universit\"at M\"unchen\\
+  Ludwigstra{\ss}e 33\\
+  80539 M\"unchen, Germany\\
+  E-mail: \email{Torsten.Hothorn@R-project.org}\\
+  URL: \url{http://www.stat.uni-muenchen.de/~hothorn/}\\
+
+  Kurt Hornik, Achim Zeileis\\
+  Institute for Statistics and Mathematics\\
+  WU Wirtschaftsuniversit\"at Wien\\
+  Augasse 2--6\\
+  1090 Wien, Austria\\
+  E-mail: \email{Kurt.Hornik@R-project.org}, \email{Achim.Zeileis@R-project.org}\\
+  URL: \url{http://statmath.wu.ac.at/~hornik/},\\
+  \phantom{URL:} \url{http://statmath.wu.ac.at/~zeileis/}
+}
+
+
+\begin{document}
+
+<<setup, echo = FALSE, results = hide>>=
+options(width = 70, SweaveHooks = list(leftpar = 
+    function() par(mai = par("mai") * c(1, 1.1, 1, 1))))
+require("party")
+require("coin")
+set.seed(290875)
+@
+
+\setkeys{Gin}{width=\textwidth}
+
+
+\section{Introduction}
+
+The majority of recursive partitioning algorithms 
+are special cases of a simple two-stage algorithm: 
+First partition the observations by univariate splits in a recursive way and
+second fit a constant model in each cell of the resulting partition.
+The most popular implementations of such algorithms are `CART' 
+\citep{classifica:1984} and `C4.5' \citep{Quinlan1993}. Not unlike AID,   
+both perform an exhaustive search over all possible splits maximizing an
+information measure of node impurity selecting the 
+covariate showing the best split.
+This approach has two fundamental problems: overfitting and a selection 
+bias towards covariates with many possible splits. 
+With respect to the 
+overfitting problem \cite{Mingers1987} notes that the algorithm
+\begin{quote}
+[\ldots] has no concept of statistical significance, and so cannot
+distinguish between a significant and an insignificant improvement in the
+information measure.
+\end{quote}
+With the \pkg{party} package \citep[see][for a full description of its
+methodological foundations]{Hothorn+Hornik+Zeileis:2006a}
+we enter at the point where \cite{WhiteLiu1994} demand for
+\begin{quote}
+[\ldots] a \textit{statistical} approach [to recursive partitioning] which
+takes
+into account the \textit{distributional} properties of the measures.
+\end{quote} 
+We present a unified framework embedding recursive binary partitioning into
+the well defined theory of permutation tests developed by
+\cite{StrasserWeber1999}.
+The conditional distribution of statistics measuring the association between
+responses and covariates is the basis for an unbiased selection among
+covariates measured at different scales. 
+Moreover, multiple test procedures are applied to determine whether no
+significant
+association between any of the covariates and the response can be stated and 
+the recursion needs to stop.
+
+\section{Recursive binary partitioning} \label{algo}
+
+We focus on regression models describing the conditional distribution of a
+response variable $\Y$ given the status of $m$ covariates by
+means of tree-structured recursive partitioning. The response $\Y$ from some
+sample space $\sY$ may be multivariate as well. 
+The $m$-dimensional covariate vector $\X = (X_1, \dots, X_m)$ is taken 
+from a sample space $\sX = \sX_1 \times \cdots \times \sX_m$.
+Both response variable and covariates may be measured
+at arbitrary scales.
+We assume that the conditional distribution $D(\Y | \X)$ of the response 
+$\Y$ given the covariates $\X$ depends on a function $f$ of the covariates
+\begin{eqnarray*} 
+D(\Y | \X) = D(\Y | X_1, \dots, X_m) = D(\Y | f( X_1, \dots,
+X_m)),
+\end{eqnarray*}
+where we restrict ourselves to partition based regression relationships,
+i.e., $r$ disjoint cells $B_1, \dots, B_r$ partitioning the covariate space $\sX
+= \bigcup_{k = 1}^r B_k$.
+A model of the regression relationship is to be fitted based on a learning 
+sample $\LS$, i.e., a random sample of $n$ independent and
+identically distributed observations, possibly with some covariates $X_{ji}$
+missing,
+\begin{eqnarray*}
+\LS & = & \{ (\Y_i, X_{1i}, \dots, X_{mi}); i = 1, \dots, n \}.
+\end{eqnarray*}
+For the sake of simplicity, we use a learning sample
+<<party-data, echo = TRUE>>=
+ls <- data.frame(y = gl(3, 50, labels = c("A", "B", "C")), x1 = rnorm(150) + rep(c(1, 0, 0), c(50, 50,
+50)), x2 = runif(150))
+@
+in the following illustrations.
+A generic algorithm for recursive binary partitioning for a given learning
+sample $\LS$ can be formulated using non-negative integer valued case weights $\w
+= (w_1, \dots, w_n)$. Each node of a tree is represented by a vector of
+case weights having non-zero elements when the corresponding observations
+are elements of the node and are zero otherwise. The following algorithm
+implements recursive binary partitioning:
+\begin{enumerate}
+\item For case weights $\w$ test the global null hypothesis of independence between
+      any of the $m$ covariates and the response. Stop if this 
+      hypothesis cannot be rejected. 
+      Otherwise select the covariate $X_{j^*}$ with strongest 
+      association to $\Y$.
+\item Choose a set $A^* \subset \sX_{j^*}$ in order to split $\sX_{j^*}$ into
+      two disjoint sets $A^*$ and $\sX_{j^*} \setminus A^*$. 
+      The case weights $\w_\text{left}$ and $\w_\text{right}$ determine the
+      two subgroups with $w_{\text{left},i} = w_i I(X_{j^*i} \in A^*)$ and 
+      $w_{\text{right},i} = w_i I(X_{j^*i} \not\in A^*)$ for all $i = 1,
+      \dots, n$ ($I(\cdot)$ denotes the indicator function).
+\item Recursively repeat steps 1 and 2 with modified case weights 
+      $\w_\text{left}$ and $\w_\text{right}$, respectively.
+\end{enumerate}
+The separation of variable
+selection and splitting procedure into steps 1 and 2 of the algorithm
+is the key for the construction of interpretable tree
+structures not suffering a systematic tendency towards covariates with many
+possible splits or many missing values. In addition, a statistically
+motivated and intuitive stopping criterion can be implemented: We stop 
+when the global null hypothesis of independence between the
+response and any of the $m$ covariates cannot be rejected at a pre-specified
+nominal level~$\alpha$. The algorithm induces a partition $\{B_1, \dots, B_r\}$ of
+the covariate space $\sX$, where each cell $B \in \{B_1, \dots, B_r\}$ 
+is associated with a vector of case weights. 
+
+In package \pkg{party}, the dependency structure and the variables may be
+specified in a traditional formula based way
+<<party-formula, echo = TRUE, results = hide>>=
+library("party")
+ctree(y ~ x1 + x2, data = ls)
+@
+Case counts $\w$ may be specified using the \texttt{weights} argument.
+
+\section{Recursive partitioning by conditional inference} \label{framework}
+
+In the main part of this section we focus on step 1 of the generic algorithm.
+Unified tests for independence are constructed by means of the conditional
+distribution of linear statistics in the permutation test framework
+developed by \cite{StrasserWeber1999}. The determination of the best binary split
+in one selected covariate and the handling of missing values
+is performed based on standardized linear statistics within the same
+framework as well. 
+
+\subsection{Variable selection and stopping criteria}
+
+At step 1 of the generic algorithm given in Section~\ref{algo} we face an 
+independence problem. We need to decide whether there is any information
+about the response variable covered by any of the $m$  covariates. In each node
+identified by case weights $\w$, the
+global hypothesis of independence is formulated in terms of the $m$ partial hypotheses
+$H_0^j: D(\Y | X_j) = D(\Y)$ with global null hypothesis $H_0 = \bigcap_{j = 1}^m
+H_0^j$.
+When we are not able to reject $H_0$ at a pre-specified 
+level $\alpha$, we stop the recursion.
+If the global hypothesis can be rejected, we measure the association
+between $\Y$ and each of the covariates $X_j, j = 1, \dots, m$, by
+test statistics or $P$-values indicating the deviation from the partial
+hypotheses $H_0^j$.  
+
+For notational convenience and without loss of generality we assume that the
+case weights $w_i$ are either zero or one. The symmetric group of all
+permutations of  the elements of $(1, \dots, n)$ with corresponding case
+weights $w_i = 1$ is denoted by $S(\LS, \w)$. A more general notation is
+given in the Appendix. We measure the association between $\Y$ and $X_j, j = 1, \dots, m$, 
+by linear statistics of the form
+\begin{eqnarray} \label{linstat}
+\T_j(\LS, \w) = \vec \left( \sum_{i=1}^n w_i g_j(X_{ji})
+h(\Y_i, (\Y_1, \dots, \Y_n))^\top \right) \in \R^{p_jq}
+\end{eqnarray}
+where $g_j: \sX_j \rightarrow \R^{p_j}$ is a non-random transformation of
+the covariate $X_j$. The transformation may be specified using the
+\texttt{xtrafo} argument. If, for example, a ranking \textit{both}
+\texttt{x1} and \texttt{x2} is required,
+<<party-xtrafo, echo = TRUE, results = hide>>=
+ctree(y ~ x1 + x2, data = ls, xtrafo = function(data) trafo(data,
+numeric_trafo = rank))
+@
+can be used. The \emph{influence function} 
+$h: \sY \times \sY^n \rightarrow
+\R^q$ depends on the responses $(\Y_1, \dots, \Y_n)$ in a permutation
+symmetric way. 
+%%, i.e., $h(\Y_i, (\Y_1, \dots, \Y_n)) = h(\Y_i, (\Y_{\sigma(1)}, \dots,
+%%\Y_{\sigma(n)}))$ for all permutations $\sigma \in S(\LS, \w)$. 
+Section~\ref{examples} explains how to choose $g_j$ and $h$ in different 
+practical settings. A $p_j \times q$ matrix is converted into a 
+$p_jq$ column vector by column-wise combination using the `vec' operator. 
+The influence function can be specified using the \texttt{ytrafo} argument.
+
+The distribution of $\T_j(\LS, \w)$ under $H_0^j$ depends on the joint
+distribution of $\Y$ and $X_j$, which is unknown under almost all practical
+circumstances. At least under the null hypothesis one can dispose of this
+dependency by fixing the covariates and conditioning on all possible 
+permutations of the responses. This principle leads to test procedures known
+as \textit{permutation tests}. 
+The conditional expectation $\mu_j \in \R^{p_jq}$ and covariance $\Sigma_j
+\in \R^{p_jq \times p_jq}$ of $\T_j(\LS, \w)$ under $H_0$ given
+all permutations $\sigma \in S(\LS, \w)$ of the responses are derived by
+\cite{StrasserWeber1999}: 
+\begin{eqnarray}
+\mu_j & = & \E(\T_j(\LS, \w) | S(\LS, \w)) = 
+\vec \left( \left( \sum_{i = 1}^n w_i g_j(X_{ji}) \right) \E(h | S(\LS,
+\w))^\top
+\right), \nonumber \\
+\Sigma_j & = & \V(\T_j(\LS, \w) | S(\LS, \w)) \nonumber \\
+& = & 
+    \frac{\ws}{\ws - 1}  \V(h | S(\LS, \w)) \otimes
+        \left(\sum_i w_i  g_j(X_{ji}) \otimes w_i  g_j(X_{ji})^\top \right) \label{expectcovar}
+\\
+& - & \frac{1}{\ws - 1}  \V(h | S(\LS, \w))  \otimes \left(
+        \sum_i w_i g_j(X_{ji}) \right)
+\otimes \left( \sum_i w_i g_j(X_{ji})\right)^\top 
+\nonumber
+\end{eqnarray}
+where $\ws = \sum_{i = 1}^n w_i$ denotes the sum of the case weights,
+$\otimes$ is the Kronecker product and the conditional expectation of the
+influence function is 
+\begin{eqnarray*}
+\E(h | S(\LS, \w)) = \ws^{-1} \sum_i w_i h(\Y_i, (\Y_1, \dots, \Y_n)) \in
+\R^q
+\end{eqnarray*} 
+with corresponding $q \times q$ covariance matrix
+\begin{eqnarray*}
+\V(h | S(\LS, \w)) = \ws^{-1} \sum_i w_i \left(h(\Y_i, (\Y_1, \dots, \Y_n)) - \E(h | S(\LS, \w))
+\right) \\
+\left(h(\Y_i, (\Y_1, \dots, \Y_n)) - \E(h | S(\LS, \w))\right)^\top.
+\end{eqnarray*}
+Having the conditional expectation and covariance at hand we are able to
+standardize a linear statistic $\T \in \R^{pq}$ of the form
+(\ref{linstat}) for some $p \in \{p_1, \dots, p_m\}$. 
+Univariate test statistics~$c$ mapping an observed multivariate 
+linear statistic $\bft \in
+\R^{pq}$ into the real line can be of arbitrary form.  An obvious choice is
+the maximum of the absolute values of the standardized linear statistic
+\begin{eqnarray*}
+c_\text{max}(\bft, \mu, \Sigma)  = \max_{k = 1, \dots, pq} \left| \frac{(\bft -
+\mu)_k}{\sqrt{(\Sigma)_{kk}}} \right|
+\end{eqnarray*}
+utilizing the conditional expectation $\mu$ and covariance matrix
+$\Sigma$. The application of a quadratic form $c_\text{quad}(\bft, \mu, \Sigma)  = 
+(\bft - \mu) \Sigma^+ (\bft - \mu)^\top$ is one alternative, although
+computationally more expensive because the Moore-Penrose 
+inverse $\Sigma^+$ of $\Sigma$ is involved.
+
+The type of test statistic to be used can be specified by means of the
+\texttt{ctree\_control} function, for example
+\begin{Schunk}
+\begin{Sinput}
+R> ctree(y ~ x1 + x2, data = ls, 
+      control = ctree_control(teststat = "max"))
+\end{Sinput}
+\end{Schunk}
+uses $c_\text{max}$ and 
+\begin{Schunk}
+\begin{Sinput}
+R> ctree(y ~ x1 + x2, data = ls, 
+      control = ctree_control(teststat = "quad"))
+\end{Sinput}
+\end{Schunk}
+takes $c_\text{quad}$ (the default).
+
+It is important to note that the test statistics $c(\bft_j, \mu_j, \Sigma_j),
+j = 1, \dots, m$, cannot be directly compared in an unbiased  
+way unless all of the covariates are measured at the same scale, i.e.,
+$p_1 = p_j, j = 2, \dots, m$. 
+In order to allow for an unbiased variable selection we need to switch to
+the $P$-value scale because $P$-values for the conditional distribution of test
+statistics $c(\T_j(\LS, \w), \mu_j, \Sigma_j)$ 
+can be directly compared among covariates
+measured at different scales. In step 1 of the generic algorithm we 
+select the covariate with minimum $P$-value, i.e., the covariate $X_{j^*}$
+with $j^*  =  \argmin_{j = 1, \dots, m} P_j$, where
+\begin{displaymath}
+P_j  =  \Prob_{H_0^j}(c(\T_j(\LS, \w), \mu_j,
+            \Sigma_j) \ge c(\bft_j, \mu_j, \Sigma_j) | S(\LS, \w))
+\end{displaymath}
+denotes the $P$-value of the conditional test for $H_0^j$. 
+So far, we have only addressed testing each partial hypothesis $H_0^j$, which
+is sufficient for an unbiased variable selection. A global test 
+for $H_0$ required in step 1 can be constructed via an aggregation of the 
+transformations $g_j, j = 1, \dots, m$,
+i.e., using a linear statistic of the form
+\begin{eqnarray*}
+\T(\LS, \w) = \vec \left( \sum_{i=1}^n w_i
+\left(g_1(X_{1i})^\top, \dots,
+g_m(X_{mi})^\top\right)^\top h(\Y_i, (\Y_1, \dots, \Y_n))^\top \right).
+%%\in \R^{\sum_j p_jq}
+\end{eqnarray*}
+However, this approach is less attractive for learning samples with
+missing values. Universally applicable approaches are multiple test 
+procedures based on $P_1, \dots, P_m$. 
+Simple Bonferroni-adjusted $P$-values ($mP_j$ prior to version 0.8-4, now $1
+- (1 - P_j)^m$ is used), available via 
+<<party-Bonf, echo = TRUE, results = hide>>=
+ctree_control(testtype = "Bonferroni")
+@
+or a min-$P$-value resampling approach 
+<<party-MC, echo = TRUE, results = hide>>=
+ctree_control(testtype = "MonteCarlo")           
+@
+are just examples and we refer
+to the multiple testing literature \citep[e.g.,][]{WestfallYoung1993}
+for more advanced methods. We reject $H_0$ when the minimum 
+of the adjusted $P$-values is less than a pre-specified nominal level $\alpha$
+and otherwise stop the algorithm. In this sense, $\alpha$
+may be seen as a unique parameter determining the size of the resulting trees.
+
+\subsection{Splitting criteria}
+
+Once we have selected a covariate in step 1 of the algorithm, the split itself can be
+established by any split criterion, including those established by
+\cite{classifica:1984} or \cite{Shih1999}. Instead of simple binary splits, 
+multiway splits can be implemented as well, for example utilizing
+the work of \cite{OBrien2004}. However, most splitting criteria are not
+applicable to response variables measured at arbitrary scales and we
+therefore utilize the permutation test framework described above  
+to find the optimal binary split in one selected 
+covariate $X_{j^*}$ in step~2 of the generic algorithm. The goodness of a split is
+evaluated by two-sample linear statistics which are special cases of the linear 
+statistic (\ref{linstat}). 
+For all possible subsets $A$ of the sample space $\sX_{j^*}$ the linear
+statistic
+\begin{eqnarray*}
+\T^A_{j^*}(\LS, \w) = \vec \left( \sum_{i=1}^n w_i I(X_{j^*i} \in A) 
+                                  h(\Y_i, (\Y_1, \dots, \Y_n))^\top \right) \in \R^{q}
+\end{eqnarray*}
+induces a two-sample statistic measuring the discrepancy between the samples 
+$\{ \Y_i | w_i > 0 \text{ and } X_{ji} \in A; i = 1, \dots, n\}$ 
+and $\{ \Y_i | w_i > 0 \text{ and } X_{ji} \not\in A; i = 1, \dots, n\}$. 
+The conditional expectation $\mu_{j^*}^A$ and covariance
+$\Sigma_{j^*}^A$
+can be computed by (\ref{expectcovar}).
+The split $A^*$ with a test statistic maximized over all possible
+subsets $A$ is established:
+\begin{eqnarray} \label{split}
+A^* = \argmax_A c(\bft_{j^*}^A, \mu_{j^*}^A, \Sigma_{j^*}^A).
+\end{eqnarray}
+The statistics $c(\bft_{j^*}^A, \mu_{j^*}^A, \Sigma_{j^*}^A)$ are available
+for each node with
+<<party-ss, echo = TRUE, results = hide>>=
+ctree_control(savesplitstats = TRUE)
+@
+and can be used to depict a scatter plot of the covariate
+$\sX_{j^*}$ against the statistics.
+
+Note that we do not need to compute the distribution of 
+$c(\bft_{j^*}^A, \mu_{j^*}^A, \Sigma_{j^*}^A)$ in step~2. 
+In order to anticipate pathological splits one can restrict the number of
+possible subsets that are evaluated, for example by introducing restrictions
+on the sample size or the sum of the case weights in each of the two groups
+of observations induced by a possible split. For example,
+<<party-minsplit, echo = TRUE, results = hide>>=
+ctree_control(minsplit = 20)
+@
+requires the sum of the weights in both the left and right daughter 
+node to exceed the value of $20$.
+
+\subsection{Missing values and surrogate splits}
+
+If an observation $X_{ji}$ in covariate $X_j$ is missing, we set the
+corresponding case weight $w_i$ to zero for the computation of $\T_j(\LS, \w)$
+and, if we would like to split in $X_j$, in $\T_{j}^A(\LS, \w)$ as well.
+Once a split $A^*$ in $X_j$ has been implemented, surrogate splits can be 
+established by
+searching for a split leading to roughly the same division of the
+observations as the original split. One simply replaces the original
+response variable by a binary variable $I(X_{ji} \in A^*)$ coding the
+split and proceeds as described in the previous part. The number of
+surrogate splits can be controlled using
+<<party-maxsurr, echo = TRUE, results = hide>>=
+ctree_control(maxsurrogate = 3)
+@
+
+\subsection{Inspecting a tree}
+
+Once we have fitted a conditional tree via
+<<party-fitted, echo = TRUE>>=
+ct <- ctree(y ~ x1 + x2, data = ls)
+@
+we can inspect the results via a \texttt{print} method
+<<party-print, echo = TRUE>>=
+ct
+@
+or by looking at a graphical representation as in Figure~\ref{party-plot1}.
+
+\begin{figure}[h]
+\begin{center}
+<<party-plot, echo = TRUE, fig = TRUE, height = 5, width = 8>>=
+plot(ct)
+@
+\caption{A graphical representation of a classification tree.
+\label{party-plot1}}
+\end{center}
+\end{figure}
+
+Each node can be extracted by its node number, i.e., the root node is
+<<party-nodes, echo = TRUE>>=
+nodes(ct, 1)
+@
+This object is a conventional list with elements
+<<party-nodelist, echo = TRUE>>=
+names(nodes(ct, 1)[[1]])
+@
+and we refer to the manual pages for a description of those elements.
+The \texttt{Predict} function aims at computing predictions in the space of
+the response variable, in our case a factor
+<<party-Predict, echo = TRUE>>=
+Predict(ct, newdata = ls)
+@
+When we are interested in properties of the conditional distribution of the
+response given the covariates, we use
+<<party-treeresponse, echo = TRUE>>=
+treeresponse(ct, newdata = ls[c(1, 51, 101),])
+@
+which, in our case, is a list with conditional class probabilities.
+We can determine the node numbers of nodes some new observations are falling
+into by
+<<party-where, echo = TRUE>>=
+where(ct, newdata = ls[c(1,51,101),])
+@
+
+\section{Examples} \label{examples}
+
+\subsection{Univariate continuous or discrete regression}
+
+For a univariate numeric response $\Y \in \R$, the most natural influence function
+is the identity $h(\Y_i, (\Y_1, \dots, \Y_n)) = \Y_i$. 
+In case some observations with extremely large or small values have been
+observed, a
+ranking of the observations may be appropriate:
+$h(\Y_i, (\Y_1, \dots, \Y_n)) = \sum_{k=1}^n w_k I(\Y_k \le \Y_i)$ for $i = 1, \dots,
+n$.
+Numeric covariates can be handled by the identity transformation 
+$g_{ji}(x) = x$ (ranks are possible, too). Nominal covariates at levels $1,
+\dots, K$ are
+represented by $g_{ji}(k) = e_K(k)$, the unit vector of length $K$ with
+$k$th element being equal to one. Due to this flexibility, special test 
+procedures like the Spearman test, the 
+Wilcoxon-Mann-Whitney test or the Kruskal-Wallis test and permutation tests
+based on ANOVA statistics or correlation coefficients
+are covered by this framework. Splits obtained from (\ref{split}) maximize the
+absolute value of the standardized difference between two means of the
+values of the influence functions. 
+For prediction, one is usually interested in an estimate of 
+the expectation of
+the response $\E(\Y | \X = \x)$ in each cell, an estimate can be 
+obtained by 
+\begin{eqnarray*}
+\hat{\E}(\Y | \X = \x) = \left(\sum_{i=1}^n w_i(\x)\right)^{-1} \sum_{i=1}^n
+w_i(\x) \Y_i.
+\end{eqnarray*}
+
+\subsection{Censored regression}
+
+The influence function $h$ may be chosen as 
+Logrank or Savage scores taking censoring into
+account and one can proceed as for univariate continuous regression. This is
+essentially the approach first published by \cite{regression:1988}. 
+An alternative is the weighting scheme suggested by
+\cite{MolinaroDudiotvdLaan2003}. A weighted Kaplan-Meier curve for the case
+weights $\w(\x)$ can serve as prediction. 
+
+\subsection{$J$-class classification}
+
+The nominal response variable at levels $1, \dots, J$ 
+is handled by influence
+functions\linebreak $h(\Y_i, (\Y_1, \dots, \Y_n)) = e_J(\Y_i)$. Note that for a
+nominal covariate $X_j$ at levels $1, \dots, K$ with  
+$g_{ji}(k) = e_K(k)$ the
+corresponding linear statistic $\T_j$ is a vectorized contingency table.
+The conditional class probabilities can be estimated via 
+\begin{eqnarray*}
+\hat{\Prob}(\Y = y | \X = \x) = \left(\sum_{i=1}^n w_i(\x)\right)^{-1}
+\sum_{i=1}^n
+w_i(\x) I(\Y_i = y), \quad y = 1, \dots, J.
+\end{eqnarray*}
+
+\subsection{Ordinal regression}
+
+Ordinal response variables measured at $J$ levels, and ordinal covariates
+measured at $K$ levels, are associated with score vectors $\xi \in
+\R^J$ and $\gamma \in \R^K$, respectively. Those scores reflect the
+`distances' between the levels: If the variable is derived from an
+underlying continuous variable, the scores can be chosen as the midpoints
+of the intervals defining the levels. The linear statistic is now a linear
+combination of the linear statistic $\T_j$ of the form
+\begin{eqnarray*}
+\M \T_j(\LS, \w) & = & \vec \left( \sum_{i=1}^n w_i \gamma^\top g_j(X_{ji})
+            \left(\xi^\top h(\Y_i, (\Y_1, \dots, \Y_n)\right)^\top \right)
+\end{eqnarray*}
+with $g_j(x) = e_K(x)$ and $h(\Y_i, (\Y_1, \dots, \Y_n)) = e_J(\Y_i)$.
+If both response and covariate are ordinal, the matrix of coefficients
+is given by the Kronecker product of both score vectors $\M = \xi \otimes \gamma \in
+\R^{1, KJ}$. In case the response is ordinal only, the matrix of 
+coefficients $\M$ is a block matrix 
+\begin{eqnarray*}
+\M = 
+\left( 
+    \begin{array}{ccc}
+        \xi_1 &          & 0     \\
+              &  \ddots  &       \\
+          0   &          & \xi_1 
+    \end{array} \right| 
+%%\left.
+%%    \begin{array}{ccc}
+%%       \xi_2 &          & 0     \\
+%%              &  \ddots  &       \\
+%%          0   &          & \xi_2 
+%%    \end{array} \right| 
+%%\left.
+    \begin{array}{c}
+         \\
+      \hdots \\
+          \\
+    \end{array} %%\right.
+\left|
+    \begin{array}{ccc}
+        \xi_q &          & 0     \\
+              &  \ddots  &       \\
+          0   &          & \xi_q 
+    \end{array} 
+\right) 
+%%\in \R^{K, KJ}
+%%\end{eqnarray*}
+\text{ or } %%and if one covariate is ordered 
+%%\begin{eqnarray*}
+%%\M = \left( 
+%%    \begin{array}{cccc}
+%%        \gamma & 0      &        & 0 \\
+%%        0      & \gamma &        & \vdots \\
+%%       0      & 0      & \hdots & 0 \\
+%%        \vdots & \vdots &        & 0 \\
+%%        0      & 0      &        & \gamma
+%%    \end{array} 
+%%    \right) 
+\M = \text{diag}(\gamma)
+%%\in \R^{J, KJ}
+\end{eqnarray*}
+when one covariate is ordered but the response is not. For both $\Y$ and $X_j$
+being ordinal, the corresponding test is known as linear-by-linear association
+test \citep{Agresti2002}. Scores can be supplied to \texttt{ctree} using the
+\texttt{scores} argument, see Section~\ref{illustrations} for an example.
+
+\subsection{Multivariate regression}
+
+For multivariate responses, the influence function is a combination of
+influence functions appropriate for any of the univariate response variables
+discussed in the previous paragraphs, e.g., indicators for multiple binary
+responses \citep{Zhang1998,NohSongPark2004}, Logrank or Savage scores
+for multiple failure times 
+%%\citep[for example tooth loss times, ][]{SuFan2004}
+and the original observations or a rank transformation for multivariate regression 
+\citep{Death2002}.
+
+\section{Illustrations and applications} \label{illustrations}
+
+In this section, we present regression problems which illustrate the
+potential fields of application of the methodology.  
+Conditional inference trees based on $c_\text{quad}$-type test statistics 
+using the identity influence function for numeric responses 
+and asymptotic $\chi^2$ distribution are applied.
+For the stopping criterion a simple
+Bonferroni correction is used and we follow the usual convention by choosing
+the nominal level of the conditional independence tests as $\alpha = 0.05$.
+
+\subsection{Tree pipit abundance}
+
+<<treepipit-ctree, echo = TRUE>>=
+data("treepipit", package = "coin")
+tptree <- ctree(counts ~ ., data = treepipit)
+@
+
+\begin{figure}[t]
+\begin{center}
+<<treepipit-plot, echo = TRUE, fig = TRUE, height = 5, width = 8>>=
+plot(tptree, terminal_panel = node_hist(tptree, breaks = 0:6-0.5, ymax = 65, 
+horizontal = FALSE, freq = TRUE))
+@
+\caption{Conditional regression tree for the tree pipit data.}
+\end{center}
+\end{figure}
+
+<<treepipit-x, echo = FALSE, results = hide>>=
+x <- tptree@tree
+@
+
+The impact of certain environmental factors on the population density of the 
+tree pipit \textit{Anthus trivialis} 
+%%in Frankonian oak forests 
+is investigated by \cite{MuellerHothorn2004}.
+The occurrence of tree pipits was recorded several times at
+$n = 86$ stands which were established on a long environmental gradient. 
+Among nine environmental factors, 
+the covariate showing the largest association to the number of tree pipits
+is the canopy overstorey $(P = $\Sexpr{round(1 - x$criterion[[3]], 3)}$)$. 
+Two groups of stands can be distinguished: Sunny stands with less than $40\%$
+canopy overstorey $(n = \Sexpr{sum(x$left$weights)})$ show a
+significantly higher density of tree pipits compared to darker stands with more than
+$40\%$ canopy overstorey $(n = \Sexpr{sum(x$right$weights)})$.
+This result is important for management decisions
+in forestry enterprises: Cutting the overstorey with release of old
+oaks creates a perfect habitat for this indicator species
+of near natural forest environments. 
+
+\subsection{Glaucoma and laser scanning images}
+
+<<glaucoma-ctree, echo = TRUE>>=
+data("GlaucomaM", package = "TH.data")
+gtree <- ctree(Class ~ ., data = GlaucomaM)
+@
+
+<<glaucoma-x, echo = FALSE, results = hide>>=
+x <- gtree@tree
+@
+
+Laser scanning images taken from the eye background are expected to serve as 
+the basis of an automated system for glaucoma diagnosis. 
+Although prediction is more important in this application
+\citep{new-glauco:2003}, a simple
+visualization of the regression relationship is useful for comparing the
+structures inherent in the learning sample with subject matter knowledge. 
+For $98$ patients and $98$ controls, matched by age
+and gender, $62$ covariates describing the eye morphology are available. The
+data is part of the 
+\pkg{TH.data} package, \url{http://CRAN.R-project.org}).
+The first split in Figure~\ref{glaucoma} separates eyes with a volume 
+above reference less than
+$\Sexpr{x$psplit$splitpoint} \text{ mm}^3$ in the inferior part of the
+optic nerve head (\texttt{vari}). 
+Observations with larger volume are mostly controls, a finding which
+corresponds to subject matter knowledge: The volume above reference measures the
+thickness of the nerve layer, expected to decrease with a glaucomatous
+damage of the optic nerve. Further separation is achieved by the volume
+above surface global (\texttt{vasg}) and the volume above reference in the
+temporal part of the optic nerve head (\texttt{vart}).
+
+\setkeys{Gin}{width=.9\textwidth}
+\begin{figure}[p]
+\begin{center}
+<<glaucoma-plot, echo = FALSE, fig = TRUE, height = 6, width = 10>>=
+plot(gtree)
+@
+\caption{Conditional inference tree for the glaucoma data. For each inner node, the
+Bonferroni-adjusted $P$-values are given, the fraction of glaucomatous eyes
+is displayed for each terminal node. (Note: node 7 was not splitted prior to
+version 0.8-4 because of using another formulation of the
+Bonferroni-adjustment.) \label{glaucoma}}
+
+<<glaucoma-plot-inner, echo = FALSE, fig = TRUE, height = 7, width = 10>>=
+plot(gtree, inner_panel = node_barplot, 
+     edge_panel = function(...) invisible(), tnex = 1)
+@
+\caption{Conditional inference tree for the glaucoma data with the 
+         fraction of glaucomatous eyes displayed for both inner and terminal
+         nodes. \label{glaucoma-inner}}
+\end{center}
+\end{figure}
+
+The plot in Figure~\ref{glaucoma} is generated by
+
+<<glaucoma-plot2, echo = TRUE, eval = FALSE>>=
+plot(gtree)
+@
+\setkeys{Gin}{width=\textwidth}
+
+and shows the distribution of the classes in 
+the terminal nodes. This distribution can be shown for the inner nodes as
+well, namely by specifying the appropriate panel generating function
+(\texttt{node\_barplot} in our case), see Figure~\ref{glaucoma-inner}.
+
+<<glaucoma-plot-inner, echo = TRUE, eval = FALSE>>=
+plot(gtree, inner_panel = node_barplot, 
+     edge_panel = function(...) invisible(), tnex = 1)
+@
+
+As mentioned in Section~\ref{framework}, it might be interesting to have a
+look at the split statistics the split point estimate was derived from.
+Those statistics can be extracted from the \texttt{splitstatistic} element
+of a split and one can easily produce scatterplots against the selected
+covariate. For all three inner nodes of \texttt{gtree}, we produce such a
+plot in Figure~\ref{glaucoma-split}. For the root node, the estimated split point
+seems very natural, since the process of split statistics seems to have a
+clear maximum indicating that the simple split point model is something
+reasonable to assume here. This is less obvious for nodes $2$ and,
+especially, $3$.
+
+\begin{figure}[t]
+\begin{center}
+<<glaucoma-split-plot, echo = TRUE, fig = TRUE, height = 4, width = 11, leftpar = TRUE>>=
+cex <- 1.6
+inner <- nodes(gtree, c(1, 2, 5))
+layout(matrix(1:length(inner), ncol = length(inner)))
+out <- sapply(inner, function(i) {
+    splitstat <- i$psplit$splitstatistic
+    x <- GlaucomaM[[i$psplit$variableName]][splitstat > 0]
+    plot(x, splitstat[splitstat > 0], main = paste("Node", i$nodeID),
+         xlab = i$psplit$variableName, ylab = "Statistic", ylim = c(0, 10),
+         cex.axis = cex, cex.lab = cex, cex.main = cex)
+    abline(v = i$psplit$splitpoint, lty = 3)
+})
+@
+\caption{Split point estimation in each inner node. The process of 
+         the standardized two-sample test statistics for each possible 
+         split point in the selected input variable is show.
+         The estimated split point is given as vertical dotted line.
+         \label{glaucoma-split}}
+\end{center}
+\end{figure}
+
+The class predictions of the tree for the learning sample (and for new
+observations as well) can be computed using the \texttt{Predict} function. A
+comparison with the true class memberships is done by
+<<glaucoma-prediction, echo = TRUE>>=
+table(Predict(gtree), GlaucomaM$Class)
+@
+When we are interested in conditional class probabilities, the
+\texttt{treeresponse} method must be used. A graphical representation is
+shown in Figure~\ref{glaucoma-probplot}.
+
+\setkeys{Gin}{width=.5\textwidth}
+\begin{figure}[ht!]
+\begin{center}
+<<glaucoma-classprob, echo = TRUE, fig = TRUE, height = 4, width = 5>>=
+prob <- sapply(treeresponse(gtree), function(x) x[1]) +
+               runif(nrow(GlaucomaM), min = -0.01, max = 0.01)
+splitvar <- nodes(gtree, 1)[[1]]$psplit$variableName
+plot(GlaucomaM[[splitvar]], prob, 
+     pch = as.numeric(GlaucomaM$Class), ylab = "Conditional Class Prob.",
+     xlab = splitvar)
+abline(v = nodes(gtree, 1)[[1]]$psplit$splitpoint, lty = 2)
+legend(0.15, 0.7, pch = 1:2, legend = levels(GlaucomaM$Class), bty = "n")
+@
+\caption{Estimated conditional class probabilities (slightly jittered) 
+         for the Glaucoma data depending on the first split variable. 
+         The vertical line denotes the first split point. \label{glaucoma-probplot}}
+\end{center}
+\end{figure}
+
+\subsection{Node positive breast cancer}
+
+<<GBSGS-ctree, echo = TRUE>>=
+data("GBSG2", package = "TH.data")  
+stree <- ctree(Surv(time, cens) ~ ., data = GBSG2)
+@
+
+\setkeys{Gin}{width=\textwidth}
+\begin{figure}[t]
+\begin{center}
+<<GBSG2-plot, echo = TRUE, fig = TRUE, height = 6, width = 10>>=
+plot(stree)
+@
+\caption{Tree-structured survival model for the GBSG2 data and the distribution of 
+survival times in the terminal nodes. The median survival time is displayed in
+each terminal node of the tree. \label{gbsg2}}
+\end{center}
+\end{figure}  
+
+
+Recursive partitioning for censored responses has attracted a lot of interest
+\citep[e.g.,][]{regression:1988,relative-r:1992}. 
+Survival trees using $P$-value adjusted Logrank statistics
+are used by \cite{statistics:2001a} 
+for the evaluation of prognostic factors for the German Breast
+Cancer Study Group (GBSG2) data,  a prospective controlled clinical trial on the
+treatment of node positive breast cancer patients. Here, we use
+Logrank scores as well. Complete data of seven prognostic factors of $686$
+women are used for prognostic modeling, the
+dataset is available within the 
+\pkg{TH.data} package.
+The number of positive lymph nodes
+(\texttt{pnodes}) and the progesterone receptor (\texttt{progrec}) have
+been identified as prognostic factors in the survival tree analysis
+by \cite{statistics:2001a}.  Here, the binary variable coding whether a
+hormonal therapy was applied or not (\texttt{horTh}) additionally is
+part of the model depicted in Figure~\ref{gbsg2}.
+
+The estimated median survival time for new patients is less informative
+compared to the whole Kaplan-Meier curve estimated from the patients in the
+learning sample for each terminal node. We can compute those `predictions'
+by means of the \texttt{treeresponse} method
+<<GBSG2-KM, echo = TRUE>>=
+treeresponse(stree, newdata = GBSG2[1:2,])
+@
+
+\subsection{Mammography experience}
+
+<<mammo-ctree, echo = TRUE>>=
+data("mammoexp", package = "TH.data")
+mtree <- ctree(ME ~ ., data = mammoexp)
+@
+
+\begin{figure}[t]
+\begin{center}
+<<mammo-plot, echo = TRUE, fig = TRUE, height = 5, width = 8>>=
+plot(mtree)
+@
+\caption{Ordinal regression for the mammography experience data with the
+fractions of (never, within a year, over one year) given in the nodes.
+No admissible split was found for node 4 because only $5$ of $91$ women reported 
+a family history of breast cancer and the sample size restrictions would 
+require more than $5$ observations in each daughter node. \label{mammoexp}}
+\end{center}
+\end{figure}
+
+
+Ordinal response variables are common in investigations where the response
+is a subjective human interpretation. 
+We use an example given by \cite{HosmerLemeshow2000}, p. 264, 
+studying the relationship between the mammography experience (never,
+within a year, over one year) and opinions about mammography expressed in
+questionnaires answered by $n = 412$ women. The resulting partition based on
+scores $\xi = (1,2,3)$ is given in Figure~\ref{mammoexp}. 
+Women who (strongly) agree with the question `You do not need a mammogram unless
+you develop symptoms' seldomly have experienced a mammography. The variable
+\texttt{benefit} is a score with low values indicating a strong agreement with the
+benefits of the examination. For those women in (strong) disagreement with the first
+question above, low values of \texttt{benefit} identify persons being more likely to have 
+experienced such an examination at all. 
+
+\bibliography{partyrefs}
+
+\end{document}
+
+
+
+\subsection{Hunting spiders}
+
+Finally, we take a closer look at a challenging dataset on animal abundance
+first reported by \cite{AartSmeenk1975} and 
+re-analyzed by \cite{Death2002} using regression trees dealing with
+multivariate responses. The
+abundance of $12$ hunting spider species is regressed on six
+environmental variables (\texttt{water}, \texttt{sand}, \texttt{moss},
+\texttt{reft}, \texttt{twigs} and \texttt{herbs}) for $n = 28$
+observations. Because of the small sample size we allow for a split if at
+least $5$ observations are element of a node and approximate the
+distribution of a $c_\text{max}$ test statistic by $9999$ Monte-Carlo
+replications. The prognostic factors \texttt{twigs} and \texttt{water}
+found by \cite{Death2002} are confirmed by the model 
+shown in Figure~\ref{spider} which additionally identifies \texttt{reft}.
+The data are available in package 
+\pkg{mvpart} \citep{mvpart2004} at \url{http://CRAN.R-project.org}.
+
+<<spider-ctree, echo = TRUE, eval = FALSE>>=
+data("spider", package = "mvpart")   
+sptree <- ctree(arct.lute + pard.lugu + zora.spin + pard.nigr + pard.pull +
+           aulo.albi + troc.terr + alop.cune + pard.mont + alop.acce + 
+           alop.fabr + arct.peri ~ herbs+reft+moss+sand+twigs+water, 
+           controls = ctree_control(teststat = "max", testtype = "MonteCarlo", nresample = 9999, 
+           minsplit = 5, mincriterion = 0.9), data = spider)
+sptree@tree$criterion
+
+library("coin")
+data("spider", package = "mvpart")
+it <- independence_test(arct.lute + pard.lugu + zora.spin + pard.nigr + pard.pull +
+                       aulo.albi + troc.terr + alop.cune + pard.mont + alop.acce +   
+                       alop.fabr + arct.peri ~ herbs+reft+moss+sand+twigs+water, 
+                       data = spider, distribution = approximate(B = 19999))
+statistic(it, "standardized")
+pvalue(it)
+@
+
+\begin{figure}[t]
+\begin{center}
+<<spider-plot, eval = FALSE, echo = TRUE, fig = TRUE>>=
+plot(sptree, terminal_panel = node_terminal)
+@
+\caption{Regression tree for hunting spider abundance. The species with
+         maximal abundance is given for each terminal node. \label{spider}}
+\end{center}
+\end{figure}
+
+
+

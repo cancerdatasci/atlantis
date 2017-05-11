@@ -1,0 +1,90 @@
+citHeader("To cite party in publications use:")
+
+citEntry(entry="Article",
+         title = "Unbiased Recursive Partitioning: A Conditional Inference Framework",
+         author = personList(as.person("Torsten Hothorn"), as.person("Kurt Hornik"), 
+                             as.person("Achim Zeileis")),
+         journal      = "Journal of Computational and Graphical Statistics",
+         year         = "2006",
+         volume       = "15",
+         number       = "3",
+         pages        = "651--674",
+
+         textVersion =
+         paste("Torsten Hothorn, Kurt Hornik and Achim Zeileis (2006).",
+               "Unbiased Recursive Partitioning: A Conditional Inference Framework.",
+               "Journal of Computational and Graphical Statistics, 15(3), 651--674."),
+	 header = "If ctree() is used cite:"
+)
+
+citEntry(entry="Article",
+         title = "Model-Based Recursive Partitioning",
+         author = personList(as.person("Achim Zeileis"), as.person("Torsten Hothorn"),
+	                     as.person("Kurt Hornik")),
+         journal      = "Journal of Computational and Graphical Statistics",
+         year         = "2008",
+         volume       = "17",
+         number       = "2",
+         pages        = "492--514",
+
+         textVersion =
+         paste("Achim Zeileis, Torsten Hothorn and Kurt Hornik (2008).",
+               "Model-Based Recursive Partitioning.",
+               "Journal of Computational and Graphical Statistics, 17(2), 492--514."),
+	 header = "If mob() is used cite:"
+)
+
+citEntry(entry="Article",
+         title = "Survival Ensembles",
+         author = personList(as.person("Torsten Hothorn"), as.person("Peter Buehlmann"),
+	                     as.person("Sandrine Dudoit"), as.person("Annette Molinaro"),
+                             as.person("Mark Van Der Laan")),
+         journal      = "Biostatistics",
+         year         = "2006",
+         volume       = "7",
+         number       = "3",
+         pages        = "355--373",
+
+         textVersion =
+         paste("Torsten Hothorn, Peter Buehlmann, Sandrine Dudoit, Annette Molinaro and Mark Van Der Laan (2006).",
+               "Survival Ensembles.",
+               "Biostatistics, 7(3), 355--373."),
+	 header = "If cforest() is used cite:"
+)
+
+citEntry(entry="Article",
+         title = "Bias in Random Forest Variable Importance Measures: Illustrations, Sources and a Solution",
+         author = personList(as.person("Carolin Strobl"), as.person("Anne-Laure Boulesteix"),
+	                     as.person("Achim Zeileis"), as.person("Torsten Hothorn")),
+         journal      = "BMC Bioinformatics",
+         year         = "2007",
+         volume       = "8",
+         number       = "25",
+         url          = "http://www.biomedcentral.com/1471-2105/8/25",
+
+         textVersion =
+         paste("Carolin Strobl, Anne-Laure Boulesteix, Achim Zeileis and Torsten Hothorn (2007).",
+               "Bias in Random Forest Variable Importance Measures: Illustrations, Sources and a Solution.",
+               "BMC Bioinformatics, 8(25). URL http://www.biomedcentral.com/1471-2105/8/25."),
+	 
+)
+
+citEntry(entry="Article",
+         title = "Conditional Variable Importance for Random Forests",
+         author = personList(as.person("Carolin Strobl"), as.person("Anne-Laure Boulesteix"),
+	                     as.person("Thomas Kneib"), as.person("Thomas Augustin"),
+                             as.person("Achim Zeileis")),
+         journal      = "BMC Bioinformatics",
+         year         = "2008",
+         volume       = "9",
+         number       = "307",
+         url          = "http://www.biomedcentral.com/1471-2105/9/307",
+
+         textVersion =
+         paste("Carolin Strobl, Anne-Laure Boulesteix, Thomas Kneib, Thomas Augustin and Achim Zeileis (2008).",
+               "Conditional Variable Importance for Random Forests.",
+               "BMC Bioinformatics, 9(307). URL http://www.biomedcentral.com/1471-2105/9/307."),
+	 
+)
+
+

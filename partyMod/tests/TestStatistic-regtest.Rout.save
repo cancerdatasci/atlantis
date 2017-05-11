@@ -1,0 +1,76 @@
+
+R Under development (unstable) (2014-06-29 r66051) -- "Unsuffered Consequences"
+Copyright (C) 2014 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> set.seed(290875)
+> library("party")
+Loading required package: grid
+Loading required package: zoo
+
+Attaching package: 'zoo'
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric
+
+Loading required package: sandwich
+Loading required package: strucchange
+Loading required package: modeltools
+Loading required package: stats4
+> 
+> ### get rid of the NAMESPACE
+> attach(asNamespace("party"))
+The following objects are masked from package:party:
+
+    cforest, cforest_classical, cforest_control, cforest_unbiased,
+    conditionalTree, ctree, ctree_control, ctree_memory, edge_simple,
+    mob, mob_control, node_barplot, node_bivplot, node_boxplot,
+    node_density, node_hist, node_inner, node_scatterplot, node_surv,
+    node_terminal, proximity, ptrafo, reweight, sctest.mob, varimp,
+    varimpAUC
+
+> 
+> ### 
+> ###
+> ###    Regression tests for test statistics
+> ###    
+> ###    functions defined in file `./src/TestStatistic.c'    
+> 
+> ### tests for function C_maxabsTeststatistic
+> xf <- gl(3, 10)
+> yf <- gl(3, 10)[sample(1:30)]
+> x <- sapply(levels(xf), function(l) as.numeric(xf == l))
+> colnames(x) <- NULL
+> y <- sapply(levels(yf), function(l) as.numeric(yf == l))
+> colnames(y) <- NULL
+> weights <- sample(1:30)
+> linstat <- LinearStatistic(x, y, weights) 
+> expcov <- ExpectCovarLinearStatistic(x, y, weights)
+> maxabs <- max(abs(linstat - expcov@expectation) / sqrt(diag(expcov@covariance)))
+> stopifnot(isequal(maxabs, 
++     maxabsTestStatistic(linstat, expcov@expectation, expcov@covariance, 1e-10)))
+> expcov@covariance[1,1] <- 1e-12
+> stopifnot(isequal(maxabs,
++     maxabsTestStatistic(linstat, expcov@expectation, expcov@covariance, 1e-10)))
+> 
+> ### tests for function C_quadformTeststatistic
+> ### -> see LinearStatistic-regtest.R
+> 
+> 
+> proc.time()
+   user  system elapsed 
+  0.660   0.012   0.668 

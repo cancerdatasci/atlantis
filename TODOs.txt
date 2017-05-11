@@ -1,0 +1,25 @@
+TODOs:
+
+* To find interesting pairs of genes:
+  - Look for anti-correlated features used in a model
+  - Look for features that appear together in trees more than expected.
+* test usage of laplace loss function
+* define function to annotate model features (currently done as part of plotting)
+* switch to CV using OOB of multiple bootstrapped samples? (however CV is easier than BS to understand)
+* cluster features
+* add text describibg model parameters (n.trees, int.depth, shrinkage)
+* generate table with all value presented in graph
+
+- add training model AUC p-val
+- print training model p-val in plot
+- predict all CCLE lines
+- add lineage barplot in plots
+- plot pred features of the same gene of the target feature.
+- look for features who don't correlate well with target overall across all models (so should have low Pearson correlation but high relative importance)
+- test whether better to color all bars in barplots (by value)
+
+
+
+CCLE fixes needed:
+- names for Expr$cls
+- all mutation features are available for the same number of lines (no?)
